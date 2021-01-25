@@ -63,8 +63,6 @@ basepath = Path(__file__).parent
 
 def aggregate_load_profiler():
 
-    tic()
-
 
     ## Parameters
 
@@ -78,36 +76,16 @@ def aggregate_load_profiler():
     params['q_med'] = 50
     params['q_min'] = 20
 
-    # Updating the parameters' values
+    # Updating the parameters' values (only for those parameters that are needed here)
 
     # Number of households considered (-)
-    n_hh = params['n_hh']
-
-    # # Average number of people, for each household (-)
-    # n_people_avg = params['n_people_avg']
-
-    # # Average square footage of the households (m2)
-    # ftg_avg = params['ftg_avg']  
+    n_hh = params['n_hh'] 
 
     # Geographical location: 'north' | 'centre' | 'south'
     location = params['location']
 
-    # # Maximum power available from the grid (contractual power) (W)
-    # power_max = params['power_max']
-
     # Energetic class of the appiances: 'A+++' | 'A++' | 'A+' | 'A' | 'B' | 'C' | 'D'
     en_class = params['en_class']
-
-    # # For appliances which don't have a duty-cycle and do not belong to "continuous"
-    # # type, the time in which they are siwtched on during 24h (T_on) is modified
-    # # exctracting a random duration from a normal distribution (centred in T_on, with
-    # # standard deviation equal to devsta), in a range defined by toll
-
-    # # Tollerance on total time in which the appliance is on (duration) (%)
-    # toll = params['toll']
-
-    # # Standard deviation on total time in which the appliance is on (duration) (min)
-    # devsta = params['devsta']
 
     # Time-step used to aggregated the results (min): 1 | 5 | 10 | 15 | 10 | 30 | 45 | 60
     dt_aggr = params['dt_aggr']
@@ -116,6 +94,12 @@ def aggregate_load_profiler():
     q_max = params['q_max']
     q_med = params['q_med']
     q_min = params['q_min']
+
+
+
+
+    #### Starting the simulation
+    tic()
 
 
     ## Time 
@@ -146,6 +130,91 @@ def aggregate_load_profiler():
     # coeff_matrix is a 2d-array in which for each appliance, its coefficient k, related to user's behaviour in different seasons, is given
     # seasons_dict is a dictionary that links each season (value) to its columns number in coeff_matrix
 
+    # Average daily load profiles (from MICENE, REMODECE) and typical duty cycle diagrams (from CESI)
+    # Rather than loading the proper file each time the load_profiler method is called, all the input data are loaded here
+    # and stored in two dicionaries (one for the average daily load profiles and one for the typical duty cycle diagrams) 
+    # that are passed each time to the functions
+
+    apps_avg_lps = {}
+    apps_dcs = {}
+    for app in apps_ID:
+
+        # Storing some useful variables needed to identify the file to be loaded and read
+
+        # app_nickname is a 2 or 3 characters string identifying the appliance
+        app_nickname = apps_ID[app][apps_attr['nickname']] 
+
+        # app_type depends from the work cycle for the appliance: 'continuous'|'no_duty_cycle'|'duty_cycle'|
+        app_type = apps_ID[app][apps_attr['type']]
+
+        # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+        app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+
+        # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+        app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+
+        # Building the name of the file to be opened and read
+        fname_nickname = app_nickname
+        fname_type = 'avg_loadprof'
+
+        # Initializing the dictionary (value) related to the current appliance - app (key)
+        apps_avg_lps[app] = {}
+
+        # Running through different seasons if the appliance's usage changes according to the season 
+        # if app_sbe == 'sawp' there will only be one iteration
+        for season in app_sbe:
+            fname_season = season
+
+            # Running through different day-types if the appliance's usage changes according to the day-type
+            # if app_wbe == 'wde' there will only be one iteration
+            for day in app_wbe:
+                fname_day = day
+
+                filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
+                
+                # Reading the time and power vectors for the load profile
+                data_lp = datareader.read_general(filename,';','Input')
+
+                # Time is stored in hours and converted to minutes
+                time_lp = data_lp[:, 0] 
+                time_lp = time_lp*60 
+
+                # Power is already stored in Watts, it corresponds to the load profile
+                power_lp = data_lp[:, 1] 
+                load_profile = power_lp
+
+                # Interpolating the load profile if it has a different time-resolution
+                if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
+                        load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+
+                # Storing the load profile in the proper element of the dictionary
+                apps_avg_lps[app][(season, day)] = load_profile
+
+        # Loading the duty cycle diagram for the appliance of "duty-cycle" type
+        if app_type == 'duty_cycle':
+
+            fname_type = 'dutycycle'
+            filename = '{}_{}.csv'.format(fname_type, fname_nickname)
+            
+            # Reading the time and power vectors for the duty cycle 
+            data_dc = datareader.read_general(filename, ';', 'Input')
+
+            # Time is already stored in  minutes
+            time_dc = data_dc[:, 0] 
+
+            # Power is already stored in Watts, it corresponds to the duty cycle
+            power_dc = data_dc[:, 1] 
+            duty_cycle = power_dc
+            
+            # Interpolating the duty-cycle, if it has a different time resolution
+            if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
+                    time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+                    duty_cycle = np.interp(time_dc, power_dc)
+
+            # Storing time and power vectors of the duty cycle
+            apps_dcs[app] = {'time_dc': time_dc,
+                            'duty_cycle': duty_cycle}
+
     # Creating a dictionary to pass such data to the various methods
     appliances_data = {
         'apps': apps,
@@ -155,6 +224,8 @@ def aggregate_load_profiler():
         'ec_levels_dict': ec_levels_dict,
         'coeff_matrix': coeff_matrix,
         'seasons_dict': seasons_dict,
+        'apps_avg_lps': apps_avg_lps,
+        'apps_dcs': apps_dcs,
         }
 
 
@@ -504,14 +575,14 @@ def aggregate_load_profiler():
 
 
     # Total energy consumption by season
-    energies = np.transpose(np.sum(energy_stor, axis = 2))
+    energies_season = np.transpose(np.sum(energy_stor, axis = 2))
 
     fig_specs = {
         'suptitle': '\n'.join(('Total energy consumption from appliances by season',
                     'for {} households with {} energetic class in the {} of Italy'.format(n_hh, en_class, location.capitalize())))
         }
 
-    fig = plot.seasonal_energy(apps_ID, energies, fig_specs, appliances_data, **params)
+    fig = plot.seasonal_energy(apps_ID, energies_season, fig_specs, appliances_data, **params)
 
     filename = '{}_{}_{}_season_tot_energy_apps.png'.format(location, en_class, n_hh)
     fpath = basepath / dirname / subdirname / subsubdirname
@@ -526,9 +597,9 @@ def aggregate_load_profiler():
         'text': 'on',
     }
 
-    energies = np.sum(energies, axis = 1)
+    energies_year = np.sum(energies_season, axis = 1)
 
-    fig = plot.yearly_energy(apps_ID, energies, fig_specs, appliances_data, **params)
+    fig = plot.yearly_energy(apps_ID, energies_year, fig_specs, appliances_data, **params)
 
     filename = '{}_{}_{}_year_tot_energy_apps.png'.format(location, en_class, n_hh)
     fpath = basepath / dirname / subdirname / subsubdirname
@@ -544,7 +615,8 @@ def aggregate_load_profiler():
     }
 
     # Dividing each energy consumption by the number of units of each appliance
-    avg_energies = energies / number_of_apps
+    number_of_apps[number_of_apps == 0] = -1
+    avg_energies = energies_year / number_of_apps
 
     fig = plot.yearly_energy(apps_ID, avg_energies, fig_specs, appliances_data, **params, energy_scale = 'kWh')
 
@@ -554,24 +626,7 @@ def aggregate_load_profiler():
     fig.savefig(fpath / filename)
 
 
-    # # Percentage over total energy consumption
-    # fig_specs = {
-    #     'suptitle': \n'.join(('\nPercentage of total energy consumption from appliances by season',
-    #                 'for {} households with {} energetic class in the {} of Italy'.format(n_hh,en_class,location.capitalize()))),
-    # }
-
-    # energies_perc = np.transpose(np.sum(energy_stor, axis = 2))
-    # energies_perc = energies_perc/np.sum(energies_perc)*100
-
-    # fig = plot.seasonal_energy_pie(apps_ID, energies_perc, fig_specs, appliances_data, **params)
-    # filename = '{}_{}_{}_season_perc_energy_apps.png'.format(location, en_class, n_hh)
-    # fpath = basepath / dirname / subdirname / subsubdirname
-
-    # fig.savefig(fpath / filename)
-
-
-    # The appliances are now divided into classes of appliances, according to the
-    # class specified in apps_ID in the position corresponding to "class" in apps_attr
+    # Percentage of energy consumption by classes of appliances
     apps_classes = {}
     apps_classes_labels = {}
 
@@ -587,23 +642,18 @@ def aggregate_load_profiler():
 
         apps_classes[apps_class]['app_list'].append(apps_ID[app][apps_attr['id_number']])
 
-    energies_tot_season = np.transpose(np.sum(energy_stor, axis = 2))
     energies_class = np.zeros((len(apps_classes), n_seasons))
     for apps_class in apps_classes:
         apps_list = apps_classes[apps_class]['app_list']
-        energies_class[apps_classes[apps_class]['id_number'], :] = np.sum(energies_tot_season[apps_list, :], axis = 0)
+        energies_class[apps_classes[apps_class]['id_number'], :] = np.sum(energies_season[apps_list, :], axis = 0)
 
-    
-    # Percentage over total energy consumption
     fig_specs = {
         'suptitle': '\n'.join(('\nPercentage of total energy consumption from classes of appliances by season',
                     'for {} households with {} energetic class in the {} of Italy'.format(n_hh,en_class,location.capitalize()))),
     }
 
-    
     energies_perc = energies_class/np.sum(energies_class)*100
     
-
     fig = plot.seasonal_energy_pie(apps_classes_labels, energies_perc, fig_specs, appliances_data, **params)
     filename = '{}_{}_{}_season_perc_energy_apps.png'.format(location, en_class, n_hh)
     fpath = basepath / dirname / subdirname / subsubdirname
@@ -611,14 +661,12 @@ def aggregate_load_profiler():
     fig.savefig(fpath / filename)
         
         
-    
-   
-        
 
+
+    #### End of the simulation   
 
     message = '\nEnd.\nTotal time: {0:.3f} .\n'.format(toc())
     print(message)
-
 
     return(lp_tot_stor)
 

@@ -140,6 +140,77 @@ def house_load_profiler(apps_availability, day, season, appliances_data, **param
 # ec_yearly_energy, ec_levels_dict = datareader.read_enclasses('classenerg_report.csv',';','Input')
 # coeff_matrix, seasons_dict = datareader.read_enclasses('coeff_matrix.csv',';','Input')
 
+# apps_avg_lps = {}
+# apps_dcs = {}
+# for app in apps_ID:
+
+#     # app_nickname is a 2 or 3 characters string identifying the appliance
+#     app_nickname = apps_ID[app][apps_attr['nickname']] 
+
+#     # app_type depends from the work cycle for the appliance: 'continuous'|'no_duty_cycle'|'duty_cycle'|
+#     app_type = apps_ID[app][apps_attr['type']]
+
+#     # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+#     app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+
+#     # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+#     app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+
+#     # Building the name of the file to be opened and read
+#     fname_nickname = app_nickname
+#     fname_type = 'avg_loadprof'
+
+#     apps_avg_lps[app] = {}
+
+#     for season in app_sbe:
+#         fname_season = season
+
+#         for day in app_wbe:
+#             fname_day = day
+
+#             filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
+            
+#             # Reading the time and power vectors for the load profile
+#             data_lp = datareader.read_general(filename,';','Input')
+
+#             # Time is stored in hours and converted to minutes
+#             time_lp = data_lp[:, 0] 
+#             time_lp = time_lp*60 
+
+#             # Power is already stored in Watts, it corresponds to the load profile
+#             power_lp = data_lp[:, 1] 
+#             load_profile = power_lp
+
+#             # Interpolating the load profile if it has a different time-resolution
+#             if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
+#                     load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+
+#             apps_avg_lps[app][(season, day)] = load_profile
+
+        
+    # if app_type == 'duty_cycle':
+    #     fname_type = 'dutycycle'
+    #     filename = '{}_{}.csv'.format(fname_type, fname_nickname)
+        
+    #     # Reading the time and power vectors for the duty cycle 
+    #     data_dc = datareader.read_general(filename, ';', 'Input')
+
+    #     # Time is already stored in  minutes
+    #     time_dc = data_dc[:, 0] 
+
+    #     # Power is already stored in Watts, it corresponds to the duty cycle
+    #     power_dc = data_dc[:, 1] 
+    #     duty_cycle = power_dc
+        
+    #     # Interpolating the duty-cycle, if it has a different time resolution
+    #     if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
+    #             time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+    #             duty_cycle = np.interp(time_dc, power_dc)
+
+    #     apps_dcs[app] = {'time_dc': time_dc,
+    #                     'duty_cycle': duty_cycle}
+
+
 # appliances_data = {
 #     'apps': apps,
 #     'apps_ID': apps_ID,
@@ -148,6 +219,8 @@ def house_load_profiler(apps_availability, day, season, appliances_data, **param
 #     'ec_levels_dict': ec_levels_dict,
 #     'coeff_matrix': coeff_matrix,
 #     'seasons_dict': seasons_dict,
+#     'apps_avg_lps': apps_avg_lps,
+#     'apps_dcs': apps_dcs,
 #     }
 
 # params = {

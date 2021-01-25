@@ -87,6 +87,12 @@ def load_profiler(app, day, season, appliances_data, **params):
 
     # seasons_dict is a dictionary that links each season (value) to its columns number in coeff_matrix
     seasons_dict = appliances_data['seasons_dict']
+
+    # apps_avg_lps is a dictionary where the average load profiles are stored for each appliance, according to the different seasonal and weeky behaviour
+    apps_avg_lps = appliances_data['apps_avg_lps']
+
+    # apps_dcs is a dictionary where the typical duty_cycle for "duty cycle" type appliances is stored
+    apps_dcs = appliances_data['apps_dcs']
     
 
     ## Appliance attributes
@@ -124,9 +130,7 @@ def load_profiler(app, day, season, appliances_data, **params):
         power = (energy*1000/365)/(T_on/60) #(W)
     
     ## Input data for the appliance
-    # Selecting the correct data-file to load, according to the appliance's type, 
-    # day type and season
-    # This also results in the routine that will be followed
+    # Selecting the correct key where to find the average daily load profile in the dictionary
     
     # app_nickname is a 2 or 3 characters string identifying the appliance
     app_nickname = apps_ID[app][apps_attr['nickname']] 
@@ -139,45 +143,30 @@ def load_profiler(app, day, season, appliances_data, **params):
 
     # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
     app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
-    
-
-    # Building the name of the file to be opened and read
-    fname_nickname = app_nickname
-    
-    # Default choice (no different behaviour for different types of day):
-    # if the appliance has got different profiles in different days of the week, this will be changed
-    fname_day = 'wde' 
-    if len(app_wbe) > 1: fname_day = day
 
     # Default choice (no different behaviour for different seasons): 
     # if the appliance has got different profiles in different seasons, this will be changed
-    fname_season = 'sawp' 
+    key_season = 'sawp' 
     if len(app_sbe) > 1: fname_season = season
+
+    # Default choice (no different behaviour for different types of day):
+    # if the appliance has got different profiles in different days of the week, this will be changed
+    key_day = 'wde' 
+    if len(app_wbe) > 1: fname_day = day
+
+    avg_load_profile = apps_avg_lps[app][(key_season, key_day)]
     
+
+
+    ### Different routines according to the appliance's type
     
+
     ## Routine to be followed for appliances which belong to "continuous" type (ac and lux)
     # The load profile has already been evaluated therefore it only needs to be loaded and properly managed
     
     if app_type == 'continuous':
         
-        fname_type = 'avg_loadprof'
-        filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
-        
-        # Reading the time and power vectors for the load profile
-        data_lp = datareader.read_general(filename,';','Input')
-
-        # Time is stored in hours and converted to minutes
-        time_lp = data_lp[:, 0] 
-        time_lp = time_lp*60 
-
-        # Power is already stored in Watts, it corresponds to the load profile
-        power_lp = data_lp[:, 1] 
-        load_profile = power_lp
-        
-        # Interpolating the load profile if it has a different time-resolution
-        if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
-            # load_profile = interp_profile(time_lp, power_lp, time_sim)
-            load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+        load_profile = avg_load_profile
 
         # Lighting: the load profile is taken as it is, since no information about the different 
         # yearly energy consumption are available. The value is just adjusted to the users' seasonal
@@ -197,34 +186,15 @@ def load_profiler(app, day, season, appliances_data, **params):
         return(load_profile)
    
      
-    ## Routine to be followed for appliances which belong to "duty cycle" or "no duty cycle" types
+    ## Routine to be followed for appliances which belong to "duty cycle" or "uniform" types
     # The load profile has to be evaluated according to the time-period in which they are switched on (T_on)
     # and to the frequency density of their usage during the day
      
     # Loading the duty-cycle, for those appliances which have one
     if app_type == 'duty_cycle':
         
-        fname_type = 'dutycycle'
-        filename = '{}_{}.csv'.format(fname_type, fname_nickname)
-        
-        # Reading the time and power vectors for the duty cycle 
-        data_dc = datareader.read_general(filename, ';', 'Input')
-
-        # Time is already stored in  minutes
-        time_dc = data_dc[:, 0] 
-
-        # Power is already stored in Watts, it corresponds to the duty cycle
-        power_dc = data_dc[:, 1] 
-        duty_cycle = power_dc
-        
-        # Interpolating the duty-cycle, if it has a different time resolution
-        if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
-            time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
-            duty_cycle = np.interp(time_dc, power_dc)
-            # f = interp1d(time_dc, power_dc, 
-            #     kind = 'linear', bounds_error = False, fill_value = 'extrapolate')
-            # time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
-            # duty_cycle = f(time_dc)
+        time_dc = apps_dcs[app]['time_dc']
+        duty_cycle = apps_dcs[app]['duty_cycle']
 
         # Adjusting the duty cycle to the actual nominal power 
         # and the users' habits (coefficient kk, varying according to the season)
@@ -232,10 +202,9 @@ def load_profiler(app, day, season, appliances_data, **params):
         if activate_kk == 0: kk = 1
         duty_cycle = duty_cycle/(np.trapz(duty_cycle, time_dc)/(time_dc[-1] - time_dc[0]))*power*kk
     
-      
     # Building a uniform duty-cycle for those appliances which use a constant power,
     # according to the time-period in a day in which they are used (T_on)  
-    if app_type == 'no_duty_cycle':
+    if app_type == 'uniform':
        
         # The following procedure is performed only if the appliance is not used continously during the day
         if T_on != time: 
@@ -266,27 +235,11 @@ def load_profiler(app, day, season, appliances_data, **params):
         duty_cycle = duty_cycle/(np.trapz(duty_cycle, time_dc)/(time_dc[-1] - time_dc[0]))*power
     
 
-    # Loading the average daily load profile during one day
-    # It is used as a frequency distribution for the appliance's use
-    # and it is managed in order to get a cumulative frequency
-    fname_type = 'avg_loadprof'
-    filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
-
-    # Reading the time and power vectors for the frequency density
-    data_fq = datareader.read_general(filename, ';', 'Input')
-
-    # Time is stored in hours and converted into minutes
-    time_fq = data_fq[:, 0] 
-    time_fq = time_fq*60 
-
-    # Power is already stored in Watts, it corresponds to the frequency density
-    power_fq = data_fq[:, 1] 
-    freq_dens = power_fq
+    ## Usage probability distributions
     
-    # Interpolating the frqeuency density, if it has a different time resolution
-    if (time_fq[-1])/(np.size(time_fq) - 1) != dt:
-            # freq_dens = interp_profile(time_fq, power_fq, time_sim)
-            freq_dens = np.interp(time_sim, time_fq, power_fq, period = time)
+    # Selecting a time instant from the usage's frquency distribution of the appliance. The latter
+    # is equal to the average daily load profile (a normalization is perfoemd since the latter is in W)
+    freq_dens = apps_avg_lps[app][(fname_season, fname_day)]
     
     # Evaluating the cumulative frquency of appliance'usage in one day
     # cumfreq = cum_freq(time_sim, freq_dens)
@@ -294,7 +247,7 @@ def load_profiler(app, day, season, appliances_data, **params):
     cum_freq = cum_freq/np.max(cum_freq)
  
 
-    ## Building the load profile
+    ## Switch-on instant
     # Selecting a random istant in which the appliances starts working (according to the cumulative frequency) 
     # and using its duty-cycle (uniform for those appliances which don't have a duty-cycle) to create the load profile
     
@@ -307,28 +260,13 @@ def load_profiler(app, day, season, appliances_data, **params):
     switch_on_instant = time_sim[cum_freq >= random_probability][0]
     switch_on_index = int(np.where(time_sim == switch_on_instant)[0]) 
     
-    # # Initializing the power vector for the load profile
-    # load_profile = np.zeros(np.shape(time_sim))
-    
-    # # Building the load profile using the appliance's duty-cycle.
-    # # Whenever the index tt (associated at a certain time moment in time_sim)
-    # # exceeeds the total time of simulation, the latter is subtracted so that
-    # # the value of the power in that instant is added starting from the beginning
-    # # of the vector
-    # for ii in range(0, len(time_dc)):
-         
-    #     tt = switch_on_index + ii
-    #     if (tt >= len(time_sim)):
-    #             tt = tt - len(time_sim)
-               
-    #     load_profile[tt] = duty_cycle[ii]
 
     ## Building the load profile using the appliance's duty-cycle.
     # This is done by initializing a vector of zeros of the same length as time_sim
     # then injecting the duty-cycle at the begininng and shifting it to the switch-on
     # instant using np.roll
     load_profile = np.zeros(np.shape(time_sim))
-    load_profile[:len(time_dc)] = duty_cycle
+    load_profile[:len(duty_cycle)] = duty_cycle
     load_profile = np.roll(load_profile, switch_on_index)
 
     return (load_profile)
@@ -360,6 +298,76 @@ def load_profiler(app, day, season, appliances_data, **params):
 # ec_yearly_energy, ec_levels_dict = datareader.read_enclasses('classenerg_report.csv',';','Input')
 # coeff_matrix, seasons_dict = datareader.read_enclasses('coeff_matrix.csv',';','Input')
 
+# apps_avg_lps = {}
+# apps_dcs = {}
+# for app in apps_ID:
+
+#     # app_nickname is a 2 or 3 characters string identifying the appliance
+#     app_nickname = apps_ID[app][apps_attr['nickname']] 
+
+#     # app_type depends from the work cycle for the appliance: 'continuous'|'no_duty_cycle'|'duty_cycle'|
+#     app_type = apps_ID[app][apps_attr['type']]
+
+#     # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+#     app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+
+#     # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+#     app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+
+#     # Building the name of the file to be opened and read
+#     fname_nickname = app_nickname
+#     fname_type = 'avg_loadprof'
+
+#     apps_avg_lps[app] = {}
+
+#     for season in app_sbe:
+#         fname_season = season
+
+#         for day in app_wbe:
+#             fname_day = day
+
+#             filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
+            
+#             # Reading the time and power vectors for the load profile
+#             data_lp = datareader.read_general(filename,';','Input')
+
+#             # Time is stored in hours and converted to minutes
+#             time_lp = data_lp[:, 0] 
+#             time_lp = time_lp*60 
+
+#             # Power is already stored in Watts, it corresponds to the load profile
+#             power_lp = data_lp[:, 1] 
+#             load_profile = power_lp
+
+#             # Interpolating the load profile if it has a different time-resolution
+#             if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
+#                     load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+
+#             apps_avg_lps[app][(season, day)] = load_profile
+
+        
+    # if app_type == 'duty_cycle':
+    #     fname_type = 'dutycycle'
+    #     filename = '{}_{}.csv'.format(fname_type, fname_nickname)
+        
+    #     # Reading the time and power vectors for the duty cycle 
+    #     data_dc = datareader.read_general(filename, ';', 'Input')
+
+    #     # Time is already stored in  minutes
+    #     time_dc = data_dc[:, 0] 
+
+    #     # Power is already stored in Watts, it corresponds to the duty cycle
+    #     power_dc = data_dc[:, 1] 
+    #     duty_cycle = power_dc
+        
+    #     # Interpolating the duty-cycle, if it has a different time resolution
+    #     if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
+    #             time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+    #             duty_cycle = np.interp(time_dc, power_dc)
+
+    #     apps_dcs[app] = {'time_dc': time_dc,
+    #                     'duty_cycle': duty_cycle}
+
 
 # appliances_data = {
 #     'apps': apps,
@@ -369,6 +377,8 @@ def load_profiler(app, day, season, appliances_data, **params):
 #     'ec_levels_dict': ec_levels_dict,
 #     'coeff_matrix': coeff_matrix,
 #     'seasons_dict': seasons_dict,
+#     'apps_avg_lps': apps_avg_lps,
+#     'apps_dcs': apps_dcs,
 #     }
 
 # params = {
@@ -395,3 +405,85 @@ def load_profiler(app, day, season, appliances_data, **params):
 # print('Yearly consumption ({}): {} kWh/year'.format(app, np.trapz(load_profile, time_lp)/60*365/1000))
 
 # plt.show()
+
+
+#####################################################################################
+
+    # # Building the name of the file to be opened and read
+    # fname_nickname = app_nickname
+    
+    # # Default choice (no different behaviour for different types of day):
+    # # if the appliance has got different profiles in different days of the week, this will be changed
+    # fname_day = 'wde' 
+    # if len(app_wbe) > 1: fname_day = day
+
+    # # Default choice (no different behaviour for different seasons): 
+    # # if the appliance has got different profiles in different seasons, this will be changed
+    # fname_season = 'sawp' 
+    # if len(app_sbe) > 1: fname_season = season
+
+######### Old way of loading load profile files (type == 'continuous')
+        # fname_type = 'avg_loadprof'
+        # filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
+        
+        # # Reading the time and power vectors for the load profile
+        # data_lp = datareader.read_general(filename,';','Input')
+
+        # # Time is stored in hours and converted to minutes
+        # time_lp = data_lp[:, 0] 
+        # time_lp = time_lp*60 
+
+        # # Power is already stored in Watts, it corresponds to the load profile
+        # power_lp = data_lp[:, 1] 
+        # load_profile = power_lp
+        
+        # # Interpolating the load profile if it has a different time-resolution
+        # if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
+        #     # load_profile = interp_profile(time_lp, power_lp, time_sim)
+        #     load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+
+######### Old way of loading duty cycle files (type == 'duty_cycle')
+        # fname_type = 'dutycycle'
+        # filename = '{}_{}.csv'.format(fname_type, fname_nickname)
+        
+        # # Reading the time and power vectors for the duty cycle 
+        # data_dc = datareader.read_general(filename, ';', 'Input')
+
+        # # Time is already stored in  minutes
+        # time_dc = data_dc[:, 0] 
+
+        # # Power is already stored in Watts, it corresponds to the duty cycle
+        # power_dc = data_dc[:, 1] 
+        # duty_cycle = power_dc
+        
+        # # Interpolating the duty-cycle, if it has a different time resolution
+        # if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
+        #     time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+        #     duty_cycle = np.interp(time_dc, power_dc)
+        #     # f = interp1d(time_dc, power_dc, 
+        #     #     kind = 'linear', bounds_error = False, fill_value = 'extrapolate')
+        #     # time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+        #     # duty_cycle = f(time_dc)
+
+######### Old way of loading frequency density files (type != 'continuous')
+        # # Loading the average daily load profile during one day
+        # # It is used as a frequency distribution for the appliance's use
+        # # and it is managed in order to get a cumulative frequency
+        # fname_type = 'avg_loadprof'
+        # filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
+
+        # # Reading the time and power vectors for the frequency density
+        # data_fq = datareader.read_general(filename, ';', 'Input')
+
+        # # Time is stored in hours and converted into minutes
+        # time_fq = data_fq[:, 0] 
+        # time_fq = time_fq*60 
+
+        # # Power is already stored in Watts, it corresponds to the frequency density
+        # power_fq = data_fq[:, 1] 
+        # freq_dens = power_fq
+        
+        # # Interpolating the frqeuency density, if it has a different time resolution
+        # if (time_fq[-1])/(np.size(time_fq) - 1) != dt:
+        #         # freq_dens = interp_profile(time_fq, power_fq, time_sim)
+        #         freq_dens = np.interp(time_sim, time_fq, power_fq, period = time)
