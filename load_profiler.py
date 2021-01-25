@@ -147,12 +147,12 @@ def load_profiler(app, day, season, appliances_data, **params):
     # Default choice (no different behaviour for different seasons): 
     # if the appliance has got different profiles in different seasons, this will be changed
     key_season = 'sawp' 
-    if len(app_sbe) > 1: fname_season = season
+    if len(app_sbe) > 1: key_season = season
 
     # Default choice (no different behaviour for different types of day):
     # if the appliance has got different profiles in different days of the week, this will be changed
     key_day = 'wde' 
-    if len(app_wbe) > 1: fname_day = day
+    if len(app_wbe) > 1: key_day = day
 
     avg_load_profile = apps_avg_lps[app][(key_season, key_day)]
     
@@ -239,7 +239,7 @@ def load_profiler(app, day, season, appliances_data, **params):
     
     # Selecting a time instant from the usage's frquency distribution of the appliance. The latter
     # is equal to the average daily load profile (a normalization is perfoemd since the latter is in W)
-    freq_dens = apps_avg_lps[app][(fname_season, fname_day)]
+    freq_dens = apps_avg_lps[app][(key_season, key_day)]
     
     # Evaluating the cumulative frquency of appliance'usage in one day
     # cumfreq = cum_freq(time_sim, freq_dens)

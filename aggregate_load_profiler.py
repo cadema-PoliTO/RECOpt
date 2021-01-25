@@ -6,7 +6,7 @@ Created on Wed Nov  4 10:53:11 2020
 """
 
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import random
 # import math
 import csv
@@ -61,13 +61,13 @@ basepath = Path(__file__).parent
 # power_scale       #power-scale for plotting: 'W' | 'kW' | 'MW'
 # energy_scale      #energy-scale for plotting: 'kWh' | 'MWh'
 
-def aggregate_load_profiler():
+def aggregate_load_profiler(params):
 
 
     ## Parameters
 
-    # Updating the parameters according to the keyboard input by calling the parameters_input() method
-    params = inp.parameters_input()
+    # # Updating the parameters according to the keyboard input by calling the parameters_input() method
+    # params = inp.parameters_input()
 
     # Some more "insiders" paramters that are to be changed manually
     params['devsta'] = 2
@@ -525,6 +525,7 @@ def aggregate_load_profiler():
         fpath = basepath / dirname / subdirname / subsubdirname
         
         fig.savefig(fpath / filename) 
+        plt.close(fig)
 
         # Average load profile and quantiles
         plot_specs = {
@@ -552,6 +553,7 @@ def aggregate_load_profiler():
         fpath = basepath / dirname / subdirname / subsubdirname
         
         fig.savefig(fpath / filename)
+        plt.close(fig)
 
         # Random sample load profiles
         plot_specs = {}
@@ -572,7 +574,7 @@ def aggregate_load_profiler():
         fpath = basepath / dirname / subdirname / subsubdirname
         
         fig.savefig(fpath / filename)
-
+        plt.close(fig)
 
     # Total energy consumption by season
     energies_season = np.transpose(np.sum(energy_stor, axis = 2))
@@ -588,7 +590,7 @@ def aggregate_load_profiler():
     fpath = basepath / dirname / subdirname / subsubdirname
 
     fig.savefig(fpath / filename)
-
+    plt.close(fig)
 
     # Yearly total energy consumption
     fig_specs = {
@@ -605,7 +607,7 @@ def aggregate_load_profiler():
     fpath = basepath / dirname / subdirname / subsubdirname
 
     fig.savefig(fpath / filename)
-
+    plt.close(fig)
 
     # Yearly average energy consumption
     fig_specs = {
@@ -624,7 +626,7 @@ def aggregate_load_profiler():
     fpath = basepath / dirname / subdirname / subsubdirname
 
     fig.savefig(fpath / filename)
-
+    plt.close(fig)
 
     # Percentage of energy consumption by classes of appliances
     apps_classes = {}
@@ -659,7 +661,7 @@ def aggregate_load_profiler():
     fpath = basepath / dirname / subdirname / subsubdirname
 
     fig.savefig(fpath / filename)
-        
+    plt.close(fig)        
         
 
 
@@ -671,4 +673,4 @@ def aggregate_load_profiler():
     return(lp_tot_stor)
 
 
-pp = aggregate_load_profiler()
+# pp = aggregate_load_profiler()

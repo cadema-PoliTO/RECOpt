@@ -54,7 +54,7 @@ def house_load_profiler(apps_availability, day, season, appliances_data, **param
     ## Parameters
     # Simulation parameters that can be changed from the user
 
-    # Energy class of the appliances
+    # Contractual power for each household (W)
     power_max = params['power_max']
 
    

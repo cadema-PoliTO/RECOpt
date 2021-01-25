@@ -86,127 +86,188 @@ import numpy as np
 
 ################################################################################################################################################
 
-apps, apps_ID, apps_attr = datareader.read_appliances('eltdome_report.csv', ';', 'Input')
+# apps, apps_ID, apps_attr = datareader.read_appliances('eltdome_report.csv', ';', 'Input')
 
-time = 1440
-dt = 1
-time_sim = np.arange(0, time, dt)
+# time = 1440
+# dt = 1
+# time_sim = np.arange(0, time, dt)
 
-# app = 'lighting'
+# # app = 'lighting'
 
-# # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
-# app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+# # # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+# # app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
 
-# # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
-# app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+# # # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+# # app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
 
-# print('app_wbe: {}, type {}'.format(app_wbe, type(app_wbe)))
-# print('app_sbe: {}, type {}'.format(app_sbe, type(app_sbe)))
+# # print('app_wbe: {}, type {}'.format(app_wbe, type(app_wbe)))
+# # print('app_sbe: {}, type {}'.format(app_sbe, type(app_sbe)))
 
 
-apps_avg_lps = {}
-apps_dcs = {}
-for app in apps_ID:
+# apps_avg_lps = {}
+# apps_dcs = {}
+# for app in apps_ID:
 
-        # app_nickname is a 2 or 3 characters string identifying the appliance
-        app_nickname = apps_ID[app][apps_attr['nickname']] 
+#         # app_nickname is a 2 or 3 characters string identifying the appliance
+#         app_nickname = apps_ID[app][apps_attr['nickname']] 
 
-        # app_type depends from the work cycle for the appliance: 'continuous'|'no_duty_cycle'|'duty_cycle'|
-        app_type = apps_ID[app][apps_attr['type']]
+#         # app_type depends from the work cycle for the appliance: 'continuous'|'no_duty_cycle'|'duty_cycle'|
+#         app_type = apps_ID[app][apps_attr['type']]
 
-        # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
-        app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+#         # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+#         app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
 
-        # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
-        app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+#         # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+#         app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
 
-        # Building the name of the file to be opened and read
-        fname_nickname = app_nickname
-        fname_type = 'avg_loadprof'
+#         # Building the name of the file to be opened and read
+#         fname_nickname = app_nickname
+#         fname_type = 'avg_loadprof'
 
-        apps_avg_lps[app] = {}
+#         apps_avg_lps[app] = {}
 
-        for season in app_sbe:
-                fname_season = season
+#         for season in app_sbe:
+#                 fname_season = season
 
-                for day in app_wbe:
-                        fname_day = day
+#                 for day in app_wbe:
+#                         fname_day = day
 
-                        filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
+#                         filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
                         
-                        # Reading the time and power vectors for the load profile
-                        data_lp = datareader.read_general(filename,';','Input')
+#                         # Reading the time and power vectors for the load profile
+#                         data_lp = datareader.read_general(filename,';','Input')
 
-                        # Time is stored in hours and converted to minutes
-                        time_lp = data_lp[:, 0] 
-                        time_lp = time_lp*60 
+#                         # Time is stored in hours and converted to minutes
+#                         time_lp = data_lp[:, 0] 
+#                         time_lp = time_lp*60 
 
-                        # Power is already stored in Watts, it corresponds to the load profile
-                        power_lp = data_lp[:, 1] 
-                        load_profile = power_lp
+#                         # Power is already stored in Watts, it corresponds to the load profile
+#                         power_lp = data_lp[:, 1] 
+#                         load_profile = power_lp
 
-                        # Interpolating the load profile if it has a different time-resolution
-                        if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
-                                load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+#                         # Interpolating the load profile if it has a different time-resolution
+#                         if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
+#                                 load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
 
-                        apps_avg_lps[app][(season, day)] = load_profile
+#                         apps_avg_lps[app][(season, day)] = load_profile
 
         
-        if app_type == 'duty_cycle':
-                fname_type = 'dutycycle'
-                filename = '{}_{}.csv'.format(fname_type, fname_nickname)
+#         if app_type == 'duty_cycle':
+#                 fname_type = 'dutycycle'
+#                 filename = '{}_{}.csv'.format(fname_type, fname_nickname)
                 
-                # Reading the time and power vectors for the duty cycle 
-                data_dc = datareader.read_general(filename, ';', 'Input')
+#                 # Reading the time and power vectors for the duty cycle 
+#                 data_dc = datareader.read_general(filename, ';', 'Input')
 
-                # Time is already stored in  minutes
-                time_dc = data_dc[:, 0] 
+#                 # Time is already stored in  minutes
+#                 time_dc = data_dc[:, 0] 
 
-                # Power is already stored in Watts, it corresponds to the duty cycle
-                power_dc = data_dc[:, 1] 
-                duty_cycle = power_dc
+#                 # Power is already stored in Watts, it corresponds to the duty cycle
+#                 power_dc = data_dc[:, 1] 
+#                 duty_cycle = power_dc
                 
-                # Interpolating the duty-cycle, if it has a different time resolution
-                if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
-                        time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
-                        duty_cycle = np.interp(time_dc, power_dc)
+#                 # Interpolating the duty-cycle, if it has a different time resolution
+#                 if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
+#                         time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+#                         duty_cycle = np.interp(time_dc, power_dc)
 
-                apps_dcs[app] = {'time_dc': time_dc,
-                                 'power_dc': duty_cycle}
+#                 apps_dcs[app] = {'time_dc': time_dc,
+#                                  'power_dc': duty_cycle}
+
+
+
+######################################################################################################################################################      
 
 
 
         
 
-# print(len(apps_avg_lps))    
-# print(len(apps_avg_lps['lighting']))
-# print(len(apps_avg_lps['washing_machine']))
-# print(np.shape(apps_avg_lps['tv'][('sawp','wde')]))
+# seasons = {
+#     'winter': (0, 'w'),
+#     'spring': (1, 'ap'),
+#     'summer': (2, 's'),
+#     'autumn': (3, 'ap')
+#     }
 
-# print(len(apps_dcs))
-# print(len(apps_dcs['washing_machine']))
-# print(len(apps_dcs['dish_washer']))
-# print(np.shape(apps_dcs['tumble_drier']['power_dc'])) 
+# days = {
+#     'week-day': (0, 'wd'),
+#     'weekend-day': (1, 'we')
+#     }
 
+# months = {
+#     'january': {'id': (0, 'jan'), 'season': 'winter', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'february': {'id': (1, 'feb'), 'season': 'winter', 'days_distr': {'week-day': 20, 'weekend-day': 8}},
+#     'march': {'id': (2, 'mar'), 'season': 'winter', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+#     'april': {'id': (3, 'apr'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+#     'may': {'id': (4, 'may'), 'season': 'spring', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'june': {'id': (5, 'jun'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+#     'july': {'id': (6, 'jul'), 'season': 'summer', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+#     'august': {'id': (7, 'aug'), 'season': 'summer', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'september': {'id': (8, 'sep'), 'season': 'summer', 'days_distr': {'week-day': 20, 'weekend-day': 10}},
+#     'october': {'id': (9, 'oct'), 'season': 'autumn', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'november': {'id': (10, 'nov'), 'season': 'autumn', 'days_distr': {'week-day': 22, 'weekend-day': 8}},
+#     'december': {'id': (11, 'dec'), 'season': 'autumn', 'days_distr': {'week-day': 21, 'weekend-day': 10}},
+#     }
 
-        # # Default choice (no different behaviour for different types of day):
-        # # if the appliance has got different profiles in different days of the week, this will be changed
-        # fname_day = 'wde' 
-        # if len(app_wbe) > 1: fname_day = day
+# seasons_id_list = [seasons[season][0] for season in seasons]
+# months_id_list = [months[month]['id'][0] for month in months]
 
-        # # Default choice (no different behaviour for different seasons): 
-        # # if the appliance has got different profiles in different seasons, this will be changed
-        # fname_season = 'sawp' 
-        # if len(app_sbe) > 1: fname_season = season
+# print(seasons_id_list)
+# print(months_id_list)
 
-        
+# days_distr = {}
+# for month in months:
+#         season = months[month]['season']
+#         print(season)
+#         if season not in days_distr: days_distr[season] = {'week-day': months[month]['days_distr']['week-day'],
+#                                                            'weekend-day': months[month]['days_distr']['weekend-day']}
 
+#         else: 
+#                 days_distr[season]['week-day'] += months[month]['days_distr']['week-day']
+#                 days_distr[season]['weekend-day'] += months[month]['days_distr']['weekend-day']
 
-
+# print(days_distr)
 
       
+######################################################################################################################################
 
 
+time_length = 24
+n_days = 2
+n_months = 12
+
+pv_production_month = np.random.randint(100, size = (time_length, n_months))
+ue_consumption_month_day = np.random.randint(100, size = (time_length, n_months, n_days))
+
+
+pv_production = np.zeros((time_length, n_days)) 
+ue_consumption = np.zeros((time_length, n_days)) 
+net_load = np.zeros((time_length, n_days)) 
+pv_available = np.zeros((time_length, n_days))
+battery_charge= np.zeros((time_length, n_days))
+battery_discharge = np.zeros((time_length, n_days))
+grid_feed = np.zeros((time_length, n_days))
+grid_purchase = np.zeros((time_length, n_days))
+battery_energy = np.zeros((time_length, n_days))
+
+mm = 0
+for dd in range(n_days):
+
+        pv_production[:, dd]  = pv_production_month[:, mm]  
+        ue_consumption[:, dd] = ue_consumption_month_day[:, mm, dd]
+
+        pv_available[:, dd] = pv_production[:, dd] - ue_consumption[:, dd]
+
+        print(pv_available[:, dd])
+
+
+        net_load[pv_available[:, dd] < 0, dd] = -pv_available[pv_available[:, dd] < 0, dd]
+        pv_available[pv_available[:, dd] < 0, dd]= 0
+
+        print(pv_available[:, dd])
+        print(net_load[:, dd])
+        
+        print('\n\n\n\n')
 
   
 
