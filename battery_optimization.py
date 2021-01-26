@@ -158,8 +158,8 @@ def battery_optimization(power_available, net_load, battery_capacity, battery_sp
 
     opt_problem.solve(PULP_CBC_CMD(msg=0))
 
-    print('\nOptimization status: {}'.format(LpStatus[opt_problem.status]))
-    print('\nObjective: {}'.format(value(opt_problem.objective)))
+    # print('\nOptimization status: {}'.format(LpStatus[opt_problem.status]))
+    # print('\nObjective: {}'.format(value(opt_problem.objective)))
 
     ## Post-processing
     # The optimized values of the variables are stored in order to be returned

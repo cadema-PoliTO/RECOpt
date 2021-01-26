@@ -1,5 +1,10 @@
 import datareader
 import numpy as np
+import math
+import random
+from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
+from aggregate_load_profiler import aggregate_load_profiler as agr
 
 # # Specifying which quantities (load profiles) are going to be stored and plotted
 # load_profiles_types = {
@@ -232,45 +237,127 @@ import numpy as np
 ######################################################################################################################################
 
 
-time_length = 24
-n_days = 2
-n_months = 12
+# time_length = 24
+# n_days = 2
+# n_months = 12
 
-pv_production_month = np.random.randint(100, size = (time_length, n_months))
-ue_consumption_month_day = np.random.randint(100, size = (time_length, n_months, n_days))
-
-
-pv_production = np.zeros((time_length, n_days)) 
-ue_consumption = np.zeros((time_length, n_days)) 
-net_load = np.zeros((time_length, n_days)) 
-pv_available = np.zeros((time_length, n_days))
-battery_charge= np.zeros((time_length, n_days))
-battery_discharge = np.zeros((time_length, n_days))
-grid_feed = np.zeros((time_length, n_days))
-grid_purchase = np.zeros((time_length, n_days))
-battery_energy = np.zeros((time_length, n_days))
-
-mm = 0
-for dd in range(n_days):
-
-        pv_production[:, dd]  = pv_production_month[:, mm]  
-        ue_consumption[:, dd] = ue_consumption_month_day[:, mm, dd]
-
-        pv_available[:, dd] = pv_production[:, dd] - ue_consumption[:, dd]
-
-        print(pv_available[:, dd])
+# pv_production_month = np.random.randint(100, size = (time_length, n_months))
+# ue_consumption_month_day = np.random.randint(100, size = (time_length, n_months, n_days))
 
 
-        net_load[pv_available[:, dd] < 0, dd] = -pv_available[pv_available[:, dd] < 0, dd]
-        pv_available[pv_available[:, dd] < 0, dd]= 0
+# pv_production = np.zeros((time_length, n_days)) 
+# ue_consumption = np.zeros((time_length, n_days)) 
+# net_load = np.zeros((time_length, n_days)) 
+# pv_available = np.zeros((time_length, n_days))
+# battery_charge= np.zeros((time_length, n_days))
+# battery_discharge = np.zeros((time_length, n_days))
+# grid_feed = np.zeros((time_length, n_days))
+# grid_purchase = np.zeros((time_length, n_days))
+# battery_energy = np.zeros((time_length, n_days))
 
-        print(pv_available[:, dd])
-        print(net_load[:, dd])
+# mm = 0
+# for dd in range(n_days):
+
+#         pv_production[:, dd]  = pv_production_month[:, mm]  
+#         ue_consumption[:, dd] = ue_consumption_month_day[:, mm, dd]
+
+#         pv_available[:, dd] = pv_production[:, dd] - ue_consumption[:, dd]
+
+#         print(pv_available[:, dd])
+
+
+#         net_load[pv_available[:, dd] < 0, dd] = -pv_available[pv_available[:, dd] < 0, dd]
+#         pv_available[pv_available[:, dd] < 0, dd]= 0
+
+#         print(pv_available[:, dd])
+#         print(net_load[:, dd])
         
-        print('\n\n\n\n')
+#         print('\n\n\n\n')
 
+
+############################################################################################################################################
+
+# x_min = int(float(input('Min: '))*2)/2
+
+# x_max = int(float(input('Max: '))*2)/2
+
+
+# x_range_length = x_max - x_min
+
+# if x_range_length <= 2.5: dx = 0.5
+# elif x_range_length > 2.5 and x_range_length <=5: dx = 1
+# elif x_range_length > 5 and x_range_length <= 10: dx = 2
+# else: dx = int(x_range_length/5)
+
+# x_range = np.arange(x_min, x_max + dx, dx)
+
+# print(x_range)
+# if x_range[-1] != x_max: x_range[-1] = x_max
+
+# print(x_range)
+# print('{} : {} : {}'.format(x_min, dx, x_max))
   
 
-       
+############################################################################################################################################
+
+
+# possible_values = ['fixed SIZE', 'parametric']
+# print(possible_values)
+
+# possible_values = [value.strip("\"',. ").lower().replace(' ', '_') for value in possible_values]
+# print(possible_values)
+
+# x = 3; print('x: {}'.format(x))
+# y = x; print('y: {}'.format(y))
+
+# x = 4; print('x: {}'.format(x))
+
+# string = '     ___  gggggggghhhhhhh      ..'
+# print(string)
+# print('I want "{}" all over me'.format(string.strip("\"',. _")))
+# print('I want "{}" all over me'.format(string.replace(' ', '_').strip("\"',. ").lower()))
+
+# string = 'n people-avg'
+# print(string)
+# print(string.replace(' ', '_').replace('-', '_'))
+
+batt_specs = datareader.read_param('battery_specs.csv', ';', 'Input')
+params = datareader.read_param('parameters.csv', ';', 'Parameters')
+
+print(batt_specs)
+print(params)
+
+data_pv = datareader.read_general('pv_production_unit.csv', ';', 'Input')
+
+time_pv = data_pv[:, 0]
+pv_production_unit = data_pv[:, 1:]
+
+print(np.shape(time_pv))
+print(np.shape(pv_production_unit))
+
+time = 24
+dt = 0.50
+
+time_sim = np.arange(0, time, dt)
+print(time_sim)
+
+f = interp1d(time_pv, pv_production_unit, kind = 'linear', axis = 0, fill_value = 'extrapolate')
+
+pv_production_new = f(time_sim)
+
+print(np.shape(pv_production_new))
+
+plt.plot(time_pv, pv_production_unit[:, 0], 'b')
+plt.plot(time_sim, pv_production_new[:, 0], 'r--')
+plt.show()
+
+
+
+consumption_seasons = agr_hlp(params)/1000
+
+months = np.arange(12,1)
+seasons = np.arange(12,3)
+
+f = interp1d(seasons, consumption_seasons, kind = 'linear', axis = 0, fill_value = 'extrapolate')
 
 

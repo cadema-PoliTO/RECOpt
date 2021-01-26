@@ -185,7 +185,7 @@ def aggregate_load_profiler(params):
 
                 # Interpolating the load profile if it has a different time-resolution
                 if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
-                        load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+                    load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
 
                 # Storing the load profile in the proper element of the dictionary
                 apps_avg_lps[app][(season, day)] = load_profile
@@ -209,7 +209,7 @@ def aggregate_load_profiler(params):
             # Interpolating the duty-cycle, if it has a different time resolution
             if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
                     time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
-                    duty_cycle = np.interp(time_dc, power_dc)
+                    duty_cycle = np.interp(time_dc, data_dc[:, 0], power_dc)
 
             # Storing time and power vectors of the duty cycle
             apps_dcs[app] = {'time_dc': time_dc,

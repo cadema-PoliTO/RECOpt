@@ -1,15 +1,18 @@
 import numpy as np
-#from numpy import *
 import matplotlib.pyplot as plt
-from pulp import *
 import csv
-# import numpy_financial as npf
-from tictoc import tic, toc
+# from pulp import *
 from scipy.interpolate import interp1d
+from tabulate import tabulate
+
+import parameters_input as inp
+import plot_generator as plot
+import datareader
+from tictoc import tic, toc
 from aggregate_load_profiler import aggregate_load_profiler as agr_hlp
 from battery_optimization import battery_optimization
-from parameters_input import parameters_input
-import plot_generator as plot
+
+
 
 
 
@@ -51,7 +54,17 @@ fontsize_pielabels = params['font_small']
 
 ###########################################################################################################################################################################
 
-params = parameters_input()
+### Parameters and simulation setup
+
+
+## Parameters 
+
+# Parameters are enter from keyboard by the user. This operation is performed using
+# the method parameters_input from parameters_input.py (inp) that returns a dictionary.
+
+params = inp.parameters_input()
+
+# The values of the parameters that are needed here are taken from params
 
 # Number of households considered (-)
 n_hh = params['n_hh'] 
@@ -62,24 +75,59 @@ location = params['location']
 # Energetic class of the appiances: 'A+++' | 'A++' | 'A+' | 'A' | 'B' | 'C' | 'D'
 en_class = params['en_class']
 
-# Time-step used to aggregated the results (min): 1 | 5 | 10 | 15 | 10 | 30 | 45 | 60
-dt_aggr = params['dt_aggr']
-
 # Contractual power for each household (W)
 power_max = params['power_max']
 
+# Time-step used to aggregated the results (min): 1 | 5 | 10 | 15 | 10 | 30 | 45 | 60
+dt_aggr = params['dt_aggr']
 
 
+## Type of simulation
+# The type of simulation is chosen (fixed size or paramtric analysis) both for the pv
+# and the battery and the ranges for the sizes are specified as well. This is done using the method
+# simulation_setup from parameters_input.py (inp) that returns a dictionary and a list.
 
-# message = 'Please, specify the range of possible values for the PV size\nEnter 0 or press enter to skip and let the programme decide the range'
-# print(message)
-# pv_size_min = input('Minimum size: ')
-# pv_size_max = input('Maximum size: ')
+# Photovoltaic (PV)
+pv_setup, pv_size_range = inp.simulation_setup('PV')
 
-# message = 'Please, specify the range of possible values for the battery size\nEnter 0 or press enter to skip and let the programme decide the range'
-# print(message)
-# battery_size_min = input('Minimum size: ')
-# battery_size_max = input('Maximum size: ')
+# Battery 
+battery_setup, battery_size_range = inp.simulation_setup('battery')
+
+
+## Showing the users all the updated parameters
+   
+message = '\nThe parameters for the simulation and the simulation setup are now set as follows'
+print(message)
+
+# Simulation parameters
+tab = []
+for param in params:
+    row = [param, params[param]]
+    tab.append(row)
+
+message = '\nSimulation parameters'
+print(message) 
+print(tabulate(tab, headers=['Parameter', 'Value']))
+
+# Simulation setup (PV)
+tab = []
+for param in pv_setup:
+    row = [param, pv_setup[param]]
+    tab.append(row)
+
+message = '\nSimulation setup (PV)'
+print(message) 
+print(tabulate(tab, headers=['Parameter', 'Value']))
+
+# Simulation setup (battery)
+tab = []
+for param in battery_setup:
+    row = [param, battery_setup[param]]
+    tab.append(row)
+
+message = '\nSimulation parameters'
+print(message) 
+print(tabulate(tab, headers=['Parameter', 'Value']))
 
 
 ## Building seasons, months and week dictionaries 
@@ -91,8 +139,6 @@ seasons = {
     'summer': (2, 's'),
     'autumn': (3, 'ap')
     }
-
-
 
 days = {
     'week-day': (0, 'wd'),
@@ -106,6 +152,7 @@ days = {
 # spring from april to june, summer from july to september and autumn from october
 # to december, each month has got the following number of weekdays and weekend days.
 
+# Creating a dictionary for the months
 months = {
     'january': {'id': (0, 'jan'), 'season': 'winter', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
     'february': {'id': (1, 'feb'), 'season': 'winter', 'days_distr': {'week-day': 20, 'weekend-day': 8}},
@@ -122,7 +169,6 @@ months = {
     }
 
 # The days distribution in the seasons can be evaluated as well
-
 days_distr = {}
 for month in months:
         season = months[month]['season']
@@ -134,41 +180,14 @@ for month in months:
                 days_distr[season]['week-day'] += months[month]['days_distr']['week-day']
                 days_distr[season]['weekend-day'] += months[month]['days_distr']['weekend-day']
 
-
-
+# Storing some useful quantities
 n_months = len(months)
 n_seasons = len(seasons)
 n_days = len(days)
 
+# Creating two lists to properly slice the consumption data when interpolating from seasonal to monthly values
 months_slice = np.arange(0, n_months)
 seasons_slice = np.arange(0, n_months, int(n_months/n_seasons))
-
-
-
-grid_power = power_max*n_hh
-
-pv_size = 10          # Potenza di picco PV (kW))
-battery_size = 8       # Capacità batteria (kWh)
-
-## Battery specifications
-battery_capacity = battery_size
-battery_specifications_file = np.loadtxt("Battery_spec.txt")  
-battery_specs = {
-    'SOC_min': battery_specifications_file[0],
-    'SOC_max': battery_specifications_file[1],
-    't_cd_min': battery_specifications_file[2],
-    'eta_charge': battery_specifications_file[3],
-    'eta_discharge': battery_specifications_file[4],
-    'eta_self_discharge': battery_specifications_file[5],
-    }
-
-pv_production_unit = np.loadtxt("PPV.txt")                  # Produzione fotovoltaica (per 1 kWp)
-pv_production_month = pv_production_unit*pv_size                  # Produzione fotovoltaica scalata alla taglia
-    
-       
-ue_seasons = agr_hlp(params)                   # Carico elettrico delle utenze nella configurazione (kW)
-
-
 
 
 ## Time discretization
@@ -184,229 +203,206 @@ dt = 1
 time_sim = np.arange(0, time, dt)
 time_length = np.size(time_sim)
 
-# seasons_n = 4
-# months_n = 12 
-# days_n = 2
-
-# seasons = np.arange(0, months_n, int(months_n/seasons_n))    
-# months = np.arange(0, months_n)
-# days = np.arange(0, days_n)
-
-# print(seasons)
-# print(months)
 
 
-## Consumption from the households
-# The method aggregate_load_profiler computes the load profiles for eight typical days (a weekday and a weekend day
-# for each season), that are aggregated with a specified resolution. Here twelve months are considered, therefore
-# the load profiles for the seasons are interpolated assigning the load profile of each season to the first month
+### Input data
+
+# Maximum power from the grid (total for the aggregate of households) (kW)
+grid_power_max = power_max*n_hh/1000
+
+
+## Battery specification
+# The battery specifications are stored in a file that can be read using the method read_param
+# from the module datareader.py, that will return a dictionary
+
+battery_specs = datareader.read_param('battery_specs.csv', ';', 'Input')
+
+
+## Unit production from the photovoltaic installation (kWh/h/kWp)
+# The unit production during each hour (kWh/h/kWp) from the photovoltaic installation can 
+# be read using the method read_general from the module datareader.py, that returns a 2d-array
+# containing the time vector on the first columns and the unit production during each hour in each
+# month in the other columns
+
+data_pv = datareader.read_general('pv_production_unit.csv', ';', 'Input')
+
+time_pv = data_pv[:, 0]
+pv_production_unit = data_pv[:, 1:]
+
+# Interpolating the unit pv production, if it has a different time resolution
+if (time_pv[-1] - time_pv[0])/(np.size(time_pv) - 1) != dt:
+    
+    f_pv = interp1d(time_pv, pv_production_unit, kind = 'linear', axis = 0, fill_value = 'extrapolate')
+    pv_production_unit = f(time_sim)
+
+fig, ax = plt.subplots(figsize = figsize)
+for month in months:
+    mm = months[month]['id'][0]
+    ax.plot(time_sim, pv_production_unit[:, mm], label = month.capitalize())
+
+ax.legend()
+
+
+## Consumption fro the aggregate of households
+# The consumption from the aggregate of household is evaluated using the method aggregate_load_profiler
+# from the module aggregate_load_profiler.py that returns a 3d-array where the load profiles for typical
+# days (with a time-step of dt_aggr) are showed. The typical days are divided by season (axis = 0)  and
+# day type (weekday or weekend day, axis =2). The power is given in W, therefore it has to be converted into kW
+# Nota bene: only the consumption from households is evaluated (i.e. no consumption from shared commodities)      
+    
+consumption_seasons = agr_hlp(params)/1000
+
+# The method aggregate_load_profiler computes the load profiles for eight typical days (two for each season)
+# Here twelve months are considered, therefore the "seasonal" load profiles are interpolated into the months.
+# To do this the represententative load profile of each season is assigned to the first month of the season
+# (e.g. winter -> january). The interpolation is linear, therefore interp1d could have been used, but it does
+# not allow for periodic interpolation. Therefore a for-loop in time is used, interpolating the power
+# during each timestep
 
 # Initializing a a 3d-array where where to store the profiles interpolated for each month
-ue_consumption_month_day = np.zeros((time_length, n_months, n_days))
+consumption_month_day = np.zeros((time_length, n_months, n_days))
+
+
 
 for day in days:
 
+    fig, ax = plt.subplots(figsize = figsize)
+
     dd = days[day][0]
 
-
     for timestep in time_sim:
-        ue_consumption_month_day[timestep, :, dd] = \
-        np.interp(months_slice, seasons_slice, ue_seasons[:, timestep, dd], period = n_months)/1000
+        consumption_month_day[timestep, :, dd] = \
+        np.interp(months_slice, seasons_slice, consumption_seasons[:, timestep, dd], period = n_months)
 
+    for month in months:
+        mm = months[month]['id'][0]
+        ax.plot(time_sim, consumption_month_day[:, mm, dd], label = month.capitalize())
 
-# print(np.shape(ue_consumption))
-
-    
-
-
-
- 
-
-# ## Powers to be considered
-# # Initializing the vectors
-# pv_available = np.zeros((time_length, n_months))            # Power from PV tht is not indirectly self-consumed (kW)
-# ue_net_load = np.zeros((time_length, n_months))             # Net load for the users part of the configuration (kW)
-# battery_charge= np.zeros((time_length, n_months))           # Power that charges the batter (kW)
-# battery_discharge = np.zeros((time_length, n_months))       # Power discharged from the battery (kW)
-# grid_feed = np.zeros((time_length, n_months))               # Power fed into the grid (kW)
-# grid_purchase = np.zeros((time_length, n_months))           # Power purchased from the grid (kW)
-# battery_energy = np.zeros((time_length, n_months))          # Energy stored in the battery (kWh)
-
-# # Evaluating the actual values
-
-# ue_consumption = np.transpose((ue_consumption[:, :, 0]/1000))
-
-# pv_available = pv_production - ue_consumption
-# ue_net_load[pv_available < 0] = -pv_available[pv_available < 0]
-# pv_available[pv_available < 0] = 0
-
-
-
-
-# ## Showing some data
-
-# month = 7
-
-# fig, ax = plt.subplots(figsize = figsize)
-
-# ax.bar(time_sim, ue_consumption[:, month], color = 'b', align = 'edge', label = 'ue', alpha = 0.5)
-# ax.plot(time_sim + dt/2, ue_consumption[:, month], color = 'b')
-# ax.bar(time_sim, pv_production[:, month], color = 'r', align = 'edge', label = 'pv_prod', alpha = 0.5)
-# ax.plot(time_sim + dt/2, pv_production[:, month], color = 'r')
-# ax.bar(time_sim, pv_available[:, month], color = 'k', align = 'edge', label = 'pv_ava', alpha = 0.5)
-# ax.plot(time_sim + dt/2, pv_available[:, month], color = 'k')
-# ax.bar(time_sim, net_load[:, month], color = 'g', align = 'edge', label = 'net_load', alpha = 0.5)
-# ax.plot(time_sim + dt/2, net_load[:, month], color = 'g')
-
-# ax.legend()
-# plt.show(fig)
-
-
-# ## Solving
-# # Mixed Integer Linear Problem (MILP) Optmiziation for the battery control
-pv_energy = np.zeros((n_months, n_days))
-feed_energy = np.zeros((n_months, n_days))
-purchase_energy = np.zeros((n_months, n_days))
-consumption_energy = np.zeros((n_months, n_days))
-battery_charge_energy = np.zeros((n_months, n_days))
-battery_discharge_energy = np.zeros((n_months, n_days))
-shared_energy = np.zeros((n_months, n_days))
-
-
-for month in months:
-
-    mm = months[month]['id'][0]
-
-    pv_production = np.zeros((time_length, n_days)) 
-    ue_consumption = np.zeros((time_length, n_days)) 
-    net_load = np.zeros((time_length, n_days)) 
-    pv_available = np.zeros((time_length, n_days))
-    battery_charge= np.zeros((time_length, n_days))
-    battery_discharge = np.zeros((time_length, n_days))
-    grid_feed = np.zeros((time_length, n_days))
-    grid_purchase = np.zeros((time_length, n_days))
-    battery_energy = np.zeros((time_length, n_days))
-    shared_power = np.zeros((time_length, n_days))
-
-
-    # Creating a figure with multiple subplots, with two rows (one for each type of day)
-    fig, ax = plt.subplots(2, 1, sharex = False, sharey = False, figsize = figsize)
-    
-    # suptitle = 'Results in {}'.format(month)
-    # fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
-    fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.85, wspace = None, hspace = 0.3)
-
-
-    for day in days:
-
-        dd = days[day][0]
-
-        pv_production[:, dd]  = pv_production_month[:, mm]  
-        ue_consumption[:, dd] = ue_consumption_month_day[:, mm, dd]
-
-        pv_available[:, dd] = pv_production[:, dd] - ue_consumption[:, dd]
-        net_load[pv_available[:, dd] < 0, dd] = -pv_available[pv_available[:, dd] < 0, dd]
-        pv_available[pv_available[:, dd] < 0, dd]= 0
-        
-        grid_feed[:, dd], grid_purchase[:, dd], battery_charge[:, dd], battery_discharge[:, dd], battery_energy[:, dd] = \
-        battery_optimization(pv_available[:, dd], net_load[:, dd], battery_capacity, battery_specs, grid_power, time_length, time_sim, dt)
-    
-        shared_power = np.minimum((pv_production + battery_discharge), (ue_consumption + battery_charge))
-
-        number_of_days = months[month]['days_distr'][day]
-
-        pv_energy[mm][dd] = np.sum(pv_production)*dt*number_of_days
-        feed_energy[mm][dd] = np.sum(grid_feed)*dt*number_of_days
-        purchase_energy[mm][dd] = np.sum(grid_purchase)*dt*number_of_days
-        consumption_energy[mm][dd] = np.sum(ue_consumption)*dt*number_of_days
-        battery_charge_energy[mm][dd] = np.sum(battery_charge)*dt*number_of_days
-        battery_discharge_energy[mm][dd] = np.sum(battery_discharge)*dt*number_of_days
-        shared_energy[mm][dd] = np.sum(shared_power)*dt*number_of_days
-
-        tol = 1e-4
-        if (np.any(net_load[:, dd] + grid_feed[:, dd] + battery_charge[:, dd] - pv_available[:, dd] - grid_purchase[:, dd] - battery_discharge[:, dd] > tol)): print('ops, node')
-        if (np.any(grid_feed[:, dd] > grid_power + tol) or np.any(grid_feed[:, dd] > grid_power + tol)): print('ops, grid power')
-        if (np.any(grid_feed[:, dd] > pv_available[:,dd] + tol)): print('ops, grid feed')
-        if (np.any(battery_charge[:, dd] > pv_available[:,dd] + tol)): print('ops, battery_charge')
-
-
-        ax[dd].plot(time_sim + dt/2, pv_available[:, dd], label = 'pv_avaialble')
-        ax[dd].plot(time_sim + dt/2, net_load[:, dd], label = 'net_load')
-        ax[dd].plot(time_sim + dt/2, grid_feed[:, dd], label = 'grid_feed')
-        ax[dd].plot(time_sim + dt/2, grid_purchase[:, dd], label = 'grid_purchase')
-        ax[dd].plot(time_sim + dt/2, battery_charge[:, dd], label = 'battery_charge')
-        ax[dd].plot(time_sim + dt/2, battery_discharge[:, dd], label = 'battery_discharge')
-
-        ax[dd].bar(time_sim, shared_power[:, dd], color = 'k', width = dt, align = 'edge', label = 'shared power', alpha = 0.3)
-        
-        title = '{}, {}'.format(month.capitalize(), day)
-        ax[dd].set_title(title, fontsize = fontsize_title)
-
-        axtw = ax[dd].twinx()
-        axtw.bar(time_sim, battery_energy[:, dd]/battery_capacity*100, color = 'y', width = dt, align = 'edge', label = 'shared power', alpha = 0.3)
-        
-    ##
-    # Making the figure look properly
-    for axi in ax.flatten():
-        axi.set_xlabel('Time ({})'.format('h'), fontsize = fontsize_labels)
-        axi.set_ylabel('Power ({})'.format('kW'), fontsize = fontsize_labels)
-        axi.set_xlim([time_sim[0], time_sim[-1]])
-        # Set one tick each hour on the x-axis
-        axi.set_xticks(list(time_sim[: : int(dt)]))
-        axi.tick_params(axis ='both', labelsize = fontsize_ticks)
-        axi.tick_params(axis ='x', labelrotation = 0)
-        axi.grid()
-        axi.legend(loc = 'upper left', fontsize = fontsize_legend, ncol = 2)
-    
+    ax.set_title(day)
+    ax.legend()
 
 plt.show()
 
 
+ 
 
 
 
+# # ## Solving
+# # # Mixed Integer Linear Problem (MILP) Optmiziation for the battery control
+# pv_energy = np.zeros((n_months, n_days))
+# feed_energy = np.zeros((n_months, n_days))
+# purchase_energy = np.zeros((n_months, n_days))
+# consumption_energy = np.zeros((n_months, n_days))
+# battery_charge_energy = np.zeros((n_months, n_days))
+# battery_discharge_energy = np.zeros((n_months, n_days))
+# shared_energy = np.zeros((n_months, n_days))
 
 
-# # # # Calcolo potenza autoconsumata istantaneamente (condivisa dalla comunità)
-# # # P_lgc=np.zeros( (Nint+1,Nmonth) )
+# for month in months:
 
-# # print(battery_energy[:,0])
+#     mm = months[month]['id'][0]
 
-
-# for i in range(time_length):
-
-#     if ((net_load[i,month] + grid_feed[i,month] + battery_charge[i,month] \
-#                         - pv_available[i,month] - grid_purchase[i,month] - battery_discharge[i,month])*dt) > 1e-6: print('oh oh')
-
-
-# # print(battery_discharge[:, month])
-# # print(battery_charge[:, month])
-# # print(grid_feed[:, month])
-# # print(grid_purchase[:, month])
-
-# fig = plt.figure()
-# ax = fig.add_subplot()
-# # ax.plot(time_sim, battery_discharge[:, month], 'b--', label = 'P_b_d')
-# # ax.plot(time_sim, battery_charge[:, month], 'b', label = 'P_b_c')
-# ax.plot(time_sim, grid_purchase[:, month], 'r--', label = 'P_g_p')
-
-# ax.plot(time_sim, ue_consumption[:, month], 'b', label = 'ue')
-# ax.plot(time_sim, grid_feed[:, month], 'r', label = 'P_g_f')
-# # plt.plot(time_sim[:, month], 'g', label = 'pv_ava')
-# # plt.plot(net_load[:, month], 'g--', label = 'net_load')
-# plt.legend()
-
-# ax_twin = ax.twinx()
-# ax_twin.plot(time_sim, battery_energy[:, month], 'y', label = 'E_b')
-# plt.legend()
-
-# plt.show()
+#     pv_production = np.zeros((time_length, n_days)) 
+#     ue_consumption = np.zeros((time_length, n_days)) 
+#     net_load = np.zeros((time_length, n_days)) 
+#     pv_available = np.zeros((time_length, n_days))
+#     battery_charge= np.zeros((time_length, n_days))
+#     battery_discharge = np.zeros((time_length, n_days))
+#     grid_feed = np.zeros((time_length, n_days))
+#     grid_purchase = np.zeros((time_length, n_days))
+#     battery_energy = np.zeros((time_length, n_days))
+#     shared_power = np.zeros((time_length, n_days))
 
 
+#     # # Creating a figure with multiple subplots, with two rows (one for each type of day)
+#     # fig, ax = plt.subplots(2, 1, sharex = False, sharey = False, figsize = figsize)
+    
+#     # # suptitle = 'Results in {}'.format(month)
+#     # # fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
+#     # fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.85, wspace = None, hspace = 0.3)
 
-# # energy_shared = np.minimum((pv + battery_discharge), (ue_consumption + battery_charge))
+
+#     for day in days:
+
+#         dd = days[day][0]
+
+#         pv_production[:, dd]  = pv_production_month[:, mm]  
+#         ue_consumption[:, dd] = ue_consumption_month_day[:, mm, dd]
+
+#         pv_available[:, dd] = pv_production[:, dd] - ue_consumption[:, dd]
+#         net_load[pv_available[:, dd] < 0, dd] = -pv_available[pv_available[:, dd] < 0, dd]
+#         pv_available[pv_available[:, dd] < 0, dd]= 0
+        
+#         grid_feed[:, dd], grid_purchase[:, dd], battery_charge[:, dd], battery_discharge[:, dd], battery_energy[:, dd] = \
+#         battery_optimization(pv_available[:, dd], net_load[:, dd], battery_capacity, battery_specs, grid_power, time_length, time_sim, dt)
+    
+#         shared_power = np.minimum((pv_production + battery_discharge), (ue_consumption + battery_charge))
+
+#         number_of_days = months[month]['days_distr'][day]
+
+#         pv_energy[mm][dd] = np.sum(pv_production)*dt*number_of_days
+#         feed_energy[mm][dd] = np.sum(grid_feed)*dt*number_of_days
+#         purchase_energy[mm][dd] = np.sum(grid_purchase)*dt*number_of_days
+#         consumption_energy[mm][dd] = np.sum(ue_consumption)*dt*number_of_days
+#         battery_charge_energy[mm][dd] = np.sum(battery_charge)*dt*number_of_days
+#         battery_discharge_energy[mm][dd] = np.sum(battery_discharge)*dt*number_of_days
+#         shared_energy[mm][dd] = np.sum(shared_power)*dt*number_of_days
+
+#         tol = 1e-4
+#         if (np.any(net_load[:, dd] + grid_feed[:, dd] + battery_charge[:, dd] - pv_available[:, dd] - grid_purchase[:, dd] - battery_discharge[:, dd] > tol)): print('ops, node')
+#         if (np.any(grid_feed[:, dd] > grid_power + tol) or np.any(grid_feed[:, dd] > grid_power + tol)): print('ops, grid power')
+#         if (np.any(grid_feed[:, dd] > pv_available[:,dd] + tol)): print('ops, grid feed')
+#         if (np.any(battery_charge[:, dd] > pv_available[:,dd] + tol)): print('ops, battery_charge')
 
 
-# # print(np.sum(grid_feed[:, month]))
-# # print(np.sum(energy_shared[:, month]))
-# # print(np.sum(energy_shared[:, month])/np.sum(pv[:, month] + battery_discharge[:, month])*100)
+# pv_energy_month = np.sum(pv_energy, axis = 1)
+# feed_energy_month = np.sum(feed_energy, axis = 1)
+# purchase_energy_month = np.sum(purchase_energy, axis = 1)
+# consumption_energy_month= np.sum(consumption_energy, axis = 1)
+# battery_charge_energy_month = np.sum(battery_charge_energy, axis = 1)
+# battery_discharge_energy_month = np.sum(battery_discharge_energy, axis = 1)
+# shared_energy_month = np.sum(shared_energy, axis = 1)
+
+# index_self_suff_month = shared_energy_month/consumption_energy_month*100
+# index_self_cons_month = shared_energy_month/pv_energy_month*100
+
+# index_self_suff_year =  np.sum(shared_energy_month)/np.sum(consumption_energy_month)*100
+# index_self_cons_year = np.sum(shared_energy_month)/np.sum(pv_energy_month)*100
+
+# [print('{0:s}: ISS: {1:.2f}%, ISC: {2:.2f}%'.format(month.capitalize(), index_self_suff_month[months[month]['id'][0]], index_self_cons_month[months[month]['id'][0]])) for month in months]
+
+# print('\nYear: ISS: {0:.2f}%, ISC: {1:.2f}%'.format(index_self_suff_year, index_self_cons_year))
+
+# #         ax[dd].plot(time_sim + dt/2, pv_available[:, dd], label = 'pv_avaialble')
+# #         ax[dd].plot(time_sim + dt/2, net_load[:, dd], label = 'net_load')
+# #         ax[dd].plot(time_sim + dt/2, grid_feed[:, dd], label = 'grid_feed')
+# #         ax[dd].plot(time_sim + dt/2, grid_purchase[:, dd], label = 'grid_purchase')
+# #         ax[dd].plot(time_sim + dt/2, battery_charge[:, dd], label = 'battery_charge')
+# #         ax[dd].plot(time_sim + dt/2, battery_discharge[:, dd], label = 'battery_discharge')
+
+# #         ax[dd].bar(time_sim, shared_power[:, dd], color = 'k', width = dt, align = 'edge', label = 'shared power', alpha = 0.3)
+        
+# #         title = '{}, {}'.format(month.capitalize(), day)
+# #         ax[dd].set_title(title, fontsize = fontsize_title)
+
+# #         axtw = ax[dd].twinx()
+# #         axtw.bar(time_sim, battery_energy[:, dd]/battery_capacity*100, color = 'y', width = dt, align = 'edge', label = 'shared power', alpha = 0.3)
+        
+# #     ##
+# #     # Making the figure look properly
+# #     for axi in ax.flatten():
+# #         axi.set_xlabel('Time ({})'.format('h'), fontsize = fontsize_labels)
+# #         axi.set_ylabel('Power ({})'.format('kW'), fontsize = fontsize_labels)
+# #         axi.set_xlim([time_sim[0], time_sim[-1]])
+# #         # Set one tick each hour on the x-axis
+# #         axi.set_xticks(list(time_sim[: : int(dt)]))
+# #         axi.tick_params(axis ='both', labelsize = fontsize_ticks)
+# #         axi.tick_params(axis ='x', labelrotation = 0)
+# #         axi.grid()
+# #         axi.legend(loc = 'upper left', fontsize = fontsize_legend, ncol = 2)
+    
+
+# # plt.show()
+
+
