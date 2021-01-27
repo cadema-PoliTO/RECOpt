@@ -11,22 +11,65 @@ from pulp import *
 
 ###############################################################################
 
-def battery_optimization(power_available, net_load, battery_capacity, battery_specs, grid_power_max, time_length, time_sim, dt):
+def battery_optimization(power_available, net_load, time_dict, technologies_dict):
     '''
     The method optimizes the operation of the battery during one day.
     Input:
+        power_available: 1d-array, containing the value of the excess power at each time-step
+        net_load: 1d-array, containing the value of the net load (consumption - production) at each time-step
+        time_dict: dict, containing all the elements needed for the time discretization
+        technologies_dict: dict, containing all the information about the technologies involved (PV, battery, grid)
 
     Output:
-
+        optimization_status: str, showing the status of the optimization
+        grid_feed: 1d-array, containing the excess power fed into the grid at each timestep
+        grid_purchase: 1d-array, containing the deficit power purchased the grid at each timestep
+        battery_charge: 1d-array, containing the excess power used to charge the battery at each timestep
+        battery_discharge: 1d-array, containing the deficit power taken from the battery at each timestep
+        battery_energy: 1d-array, containing the amount of power stored in the battery 
     '''
 
-     
+
+
+    ### Storing the given input in the proper variables
+
     ## Components activation
     # It is possible to exclude some components from the simulation
 
     grid_purchase_flag = 1
     grid_feed_flag = 1
     battery_flag = 1
+
+
+    ## Time discretization
+
+    # # Total time of simulation (h) - for each typical day
+    # time = time_dict['time']
+
+    # Timestep for the simulation (h)
+    dt = time_dict['dt']
+
+    # # Vector of time, from 00:00 to 23:59, i.e. 24 h
+    # time_sim = time_dict['time_sim']
+
+    # Number of elements of the vector of time
+    time_length = time_dict['time_length']
+
+
+    ## Sizes and battery specficiations of the various technologies
+
+    # Grid maximum power (kW)
+    grid_power_max = technologies_dict['grid_power_max']
+
+    # # PV size (kW)
+    # pv_size = technologies_dict['pv_size']
+
+    # Battery size (kW)
+    battery_size = technologies_dict['battery_size']
+    battery_capacity = battery_size
+
+    # Battery specifications 
+    battery_specs = technologies_dict['battery_specs']
      
     
     ## Battery specifications
@@ -52,8 +95,29 @@ def battery_optimization(power_available, net_load, battery_capacity, battery_sp
     battery_charge_pmax = battery_discharge_pmax
 
 
+    ## Safety net
+    # If the available power from the PV is zero at all timesteps, no optimization is needed, since
+    # all the consumption is satisfied purchasing energy from the grid. In order to avoid possible
+    # problems from the optimization problem in such cases, the optimization is just skipped.
+
+    # Defining a tolerance on the available power to be considered zero (since it is given in kW,
+    # a tolerance of 1e-4 is a tenth of a W)
+    tol = 1e-4
+    if np.all(power_available < 0 + tol):
+        # print('Optimization is avoided since there is no excess power from the PV')
+        problem_status = 'Opt. unnecessary'
+        grid_feed = np.zeros((time_length,))
+        grid_purchase = net_load
+        battery_charge = np.zeros((time_length,))
+        battery_discharge = np.zeros((time_length,))
+        battery_energy = battery_energy_min*np.ones((time_length,))
+
+        return problem_status, grid_feed, grid_purchase, battery_charge, battery_discharge, battery_energy
+
+
 
     ### Optimization procedure
+    # In case there is excess power from the PV, the optimization procedure is followed
 
     ## Definition of the problem
 
@@ -103,7 +167,7 @@ def battery_optimization(power_available, net_load, battery_capacity, battery_sp
 
         # Equilibrium at the electric node (in-coming power = exiting power)
         opt_problem += (net_load[i] + grid_feed[i] + battery_charge[i] \
-                        - power_available[i] - grid_purchase[i] - battery_discharge[i])*dt == 0  
+                         - grid_purchase[i] - battery_discharge[i])*dt == 0  #- power_available[i]
         
         # Energy conservation for the battery (and initial SOC = final SOC)
         if (i < time_length - 1):
@@ -145,21 +209,37 @@ def battery_optimization(power_available, net_load, battery_capacity, battery_sp
     ## Setting the objective 
     # The objective is to minimize the interactions with the grid
 
-    opt_problem += lpSum([grid_feed[j] + grid_purchase[j]   for j in range(time_length)])
+    opt_problem += lpSum([grid_feed[i] + grid_purchase[i]   for i in range(time_length)])
     
+    # The problem is saved in a text file
+    with open('opt_problem.txt', 'w') as f:
+        print(opt_problem, file=f)   
+
     
     ## Solution of the problem
     # For each time-step the variables are evaluated in order to reach the objective
-    
-    # with open('problem.txt', 'w') as f:
-    #     print(opt_problem, file=f)
-    # status = opt_problem.solve()
-    # obj = value(opt_problem.objective)
 
-    opt_problem.solve(PULP_CBC_CMD(msg=0))
+    # In some particular cases PULP fails at optimizing the problem and raises an error
+    # In order to avoid stopping the procedure due to such errors, a try-except is used
+    # If the xception raises, nans are returned
 
-    # print('\nOptimization status: {}'.format(LpStatus[opt_problem.status]))
-    # print('\nObjective: {}'.format(value(opt_problem.objective)))
+    try:
+        opt_problem.solve(PULP_CBC_CMD(msg = 0)) #PULP_CBC_CMD(msg=True)
+        
+    except:
+        optimization_status = 'Opt. did not work'
+        grid_feed = np.zeros((time_length,)); grid_feed[:] = np.nan
+        grid_purchase = np.zeros((time_length,)); grid_purchase[:] = np.nan
+        battery_charge = np.zeros((time_length,)); battery_charge[:] = np.nan
+        battery_discharge = np.zeros((time_length,)); battery_discharge[:] = np.nan
+        battery_energy = np.zeros((time_length,)); battery_energy[:] = np.nan
+
+        return optimization_status, grid_feed, grid_purchase, battery_charge, battery_discharge, battery_energy      
+
+    # If instead everything goes smooth, the optimization status is printed and the optimized values are returned
+
+    # Optimization status
+    optimization_status = LpStatus[opt_problem.status] 
 
     ## Post-processing
     # The optimized values of the variables are stored in order to be returned
@@ -181,8 +261,5 @@ def battery_optimization(power_available, net_load, battery_capacity, battery_sp
             battery_energy[i] = value(battery_energy[i])
 
 
-    # # Stato Ottimizzazione
-    # print("Stato Ottimizzazione:", LpStatus[prob.status] + '\n')
-    # print('Objective:\n' + str(obj) + '\n')
-    
-    return grid_feed, grid_purchase, battery_charge, battery_discharge, battery_energy 
+    return optimization_status, \
+        np.asarray(grid_feed), np.asarray(grid_purchase), np.asarray(battery_charge), np.asarray(battery_discharge), np.asarray(battery_energy)

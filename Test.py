@@ -321,43 +321,55 @@ from aggregate_load_profiler import aggregate_load_profiler as agr
 # print(string)
 # print(string.replace(' ', '_').replace('-', '_'))
 
-batt_specs = datareader.read_param('battery_specs.csv', ';', 'Input')
-params = datareader.read_param('parameters.csv', ';', 'Parameters')
+# batt_specs = datareader.read_param('battery_specs.csv', ';', 'Input')
+# params = datareader.read_param('parameters.csv', ';', 'Parameters')
 
-print(batt_specs)
-print(params)
+# print(batt_specs)
+# print(params)
 
-data_pv = datareader.read_general('pv_production_unit.csv', ';', 'Input')
+# data_pv = datareader.read_general('pv_production_unit.csv', ';', 'Input')
 
-time_pv = data_pv[:, 0]
-pv_production_unit = data_pv[:, 1:]
+# time_pv = data_pv[:, 0]
+# pv_production_unit = data_pv[:, 1:]
 
-print(np.shape(time_pv))
-print(np.shape(pv_production_unit))
+# print(np.shape(time_pv))
+# print(np.shape(pv_production_unit))
 
-time = 24
-dt = 0.50
+# time = 24
+# dt = 0.50
 
-time_sim = np.arange(0, time, dt)
-print(time_sim)
+# time_sim = np.arange(0, time, dt)
+# print(time_sim)
 
-f = interp1d(time_pv, pv_production_unit, kind = 'linear', axis = 0, fill_value = 'extrapolate')
+# f = interp1d(time_pv, pv_production_unit, kind = 'linear', axis = 0, fill_value = 'extrapolate')
 
-pv_production_new = f(time_sim)
+# pv_production_new = f(time_sim)
 
-print(np.shape(pv_production_new))
+# print(np.shape(pv_production_new))
 
-plt.plot(time_pv, pv_production_unit[:, 0], 'b')
-plt.plot(time_sim, pv_production_new[:, 0], 'r--')
-plt.show()
+# plt.plot(time_pv, pv_production_unit[:, 0], 'b')
+# plt.plot(time_sim, pv_production_new[:, 0], 'r--')
+# plt.show()
 
 
 
-consumption_seasons = agr_hlp(params)/1000
+# consumption_seasons = agr_hlp(params)/1000
 
-months = np.arange(12,1)
-seasons = np.arange(12,3)
+# months = np.arange(12,1)
+# seasons = np.arange(12,3)
 
-f = interp1d(seasons, consumption_seasons, kind = 'linear', axis = 0, fill_value = 'extrapolate')
+# f = interp1d(seasons, consumption_seasons, kind = 'linear', axis = 0, fill_value = 'extrapolate')
+
+# shasha = np.zeros((2,))
+# shasha[0] = 'time'
+# shasha[1] = 'bubu{}'.format(shasha[0])
+
+# print(shasha)
+
+mylist = []
+mylist.append('sasha')
+mylist += 'bernie'
+
+print(mylist)
 
 
