@@ -618,7 +618,7 @@ try: Path.mkdir(basepath / dirname / subdirname)
 except Exception: pass
 
 # Creating a subfolder, if not already existing
-subsubdirname = '{}_{}_{}'.format(location, en_class, n_hh)
+subsubdirname = '{}_{}_{}_simulation_results'.format(location, en_class, n_hh)
 
 try: Path.mkdir(basepath / dirname / subdirname / subsubdirname)
 except Exception: pass
@@ -660,7 +660,8 @@ if n_configurations != 1:
 
     fig = plot.parametric_analysis(main_size_range, lead_size_range, data, plot_specs, fig_specs, **{'orientation': 'vertical'})
     
-    filename = '{}_{}_{}_{}_parametric_analysis.png'.format(location, en_class, season, n_hh)
+    # filename = '{}_{}_{}_{}_parametric_analysis.png'.format(location, en_class, season, n_hh)
+    filename = 'parametric_analysis.png'
     fpath = basepath / dirname / subdirname / subsubdirname
             
     fig.savefig(fpath / filename) 
@@ -708,39 +709,6 @@ if n_configurations == 1:
 
         fig_specs['title'] = month
         
-        # plot_params = {
-        # 'time_scale': 'h',
-        # 'power_scale': 'kW',
-        # 'energy_scale': 'MWh',
-        # 'figsize': (297/25.4 , 420/25.4),
-        # 'orientation': 'horizontal',
-        # 'font_small': 14,
-        # 'font_medium': 16,
-        # 'font_large': 18,
-        # }
-
-        # # Figure setup: figure size and orientation, font-sizes 
-        # figsize = plot_params['figsize']
-        # orientation = plot_params['orientation']
-
-        # if orientation == 'horizontal': figsize = figsize[::-1]
-
-        # fontsize_title = plot_params['font_large']
-        # fontsize_legend = plot_params['font_medium']
-        # fontsize_labels = plot_params['font_medium']
-        # fontsize_text = plot_params['font_medium']
-        # fontsize_ticks = plot_params['font_small']
-        # fontsize_pielabels = plot_params['font_small']
-
-        # # Creating a figure with multiple subplots, with two rows (one for each type of day)
-        # fig, ax = plt.subplots(2, 1, sharex = False, sharey = False, figsize = figsize)
-        
-        # # suptitle = 'Results in {}'.format(month)
-        # # fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
-        # fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.85, wspace = None, hspace = 0.3)
-
-
-
         powers = np.stack((pv_production_month_day[:, mm, :],
                         consumption_month_day[:, mm, :],
                         grid_feed_month_day[:, mm, :],
@@ -751,46 +719,10 @@ if n_configurations == 1:
                         battery_energy_month_day[:, mm, :]/battery_size*100),
                         axis = 0)
 
-        for day in days:
-
-            dd = days[day][0]
-
-
-            # # Plotting the value for the typical day
-            # ax[dd].plot(time_sim + dt/2, pv_production_month_day[:, mm, dd], label = 'pv_production')
-            # ax[dd].plot(time_sim + dt/2, consumption_month_day[:, mm, dd], label = 'consumption')
-            # ax[dd].plot(time_sim + dt/2, grid_feed_month_day[:, mm, dd], label = 'grid_feed')
-            # ax[dd].plot(time_sim + dt/2, grid_purchase_month_day[:, mm, dd], label = 'grid_purchase')
-            # ax[dd].plot(time_sim + dt/2, battery_charge_month_day[:, mm, dd], label = 'battery_charge')
-            # ax[dd].plot(time_sim + dt/2, battery_discharge_month_day[:, mm, dd], label = 'battery_discharge')
-
-            # ax[dd].bar(time_sim, shared_power_month_day[:, mm, dd], color = 'k', width = dt, align = 'edge', label = 'shared power', alpha = 0.3)
-            
-            # title = '{}, {}'.format(month.capitalize(), day)
-            # ax[dd].set_title(title, fontsize = fontsize_title)
-
-            # axtw = ax[dd].twinx()
-            # axtw.plot(time_sim + dt/2, battery_energy_month_day[:, mm, dd]/battery_size*100, 'r--', label = 'energy battery')
-            
-            # # Making the figure look properly
-        
-            # ax[dd].set_xlabel('Time ({})'.format('h'), fontsize = fontsize_labels)
-            # ax[dd].set_ylabel('Power ({})'.format('kW'), fontsize = fontsize_labels)
-            # ax[dd].set_xlim([time_sim[0], time_sim[-1]])
-            # # Set one tick each hour on the x-axis
-            # ax[dd].set_xticks(list(time_sim[: : int(dt)]))
-            # ax[dd].tick_params(axis ='both', labelsize = fontsize_ticks)
-            # ax[dd].tick_params(axis ='x', labelrotation = 0)
-            # ax[dd].grid()
-            # ax[dd].legend(loc = 'upper left', fontsize = fontsize_legend, ncol = 2)
-
-            # axtw.set_ylabel('SOC ({})'.format('%'), fontsize = fontsize_labels)
-            # axtw.legend(loc = 'upper right', fontsize = fontsize_legend, ncol = 2)
-            # axtw.set_ylim([0, 100])
-
         fig = plot.daily_profiles(time_sim, powers, plot_specs, fig_specs, **params)
 
-        filename = '{}_{}_{}_{}_power_fluxes.png'.format(location, en_class, month, n_hh)
+        # filename = '{}_{}_{}_{}_power_fluxes.png'.format(location, en_class, month, n_hh)
+        filename = '{}_power_fluxes.png'.format(month)
         fpath = basepath / dirname / subdirname / subsubdirname
         
         fig.savefig(fpath / filename)

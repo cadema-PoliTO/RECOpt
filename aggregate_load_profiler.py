@@ -437,7 +437,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
         except Exception: pass 
 
         # Creating a subfolder, if not already existing
-        subsubdirname = '{}_{}_{}'.format(location, en_class, n_hh)
+        subsubdirname = '{}_{}_{}_detailed_load_profiles'.format(location, en_class, n_hh)
 
         try: Path.mkdir(basepath / dirname / subdirname / subsubdirname)
         except Exception: pass
@@ -454,7 +454,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
                 day_nickname = days[day][1]
 
                 # Saving the total, average, maximum, medium, minimum (i.e. quantile) load profiles in a .csv file
-                filename = '{}_{}_{}_{}_{}_lps_aggr.csv'.format(location, en_class, n_hh, season, day_nickname)
+                # filename = '{}_{}_{}_{}_{}_lps_aggr.csv'.format(location, en_class, n_hh, season, day_nickname)
+                filename = '{}_{}_lps_aggr.csv'.format(season, day_nickname)
                 fpath = basepath / dirname / subdirname / subsubdirname
                     
                 with open(fpath / filename, mode = 'w', newline = '') as csv_file:
@@ -465,7 +466,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
                         csv_writer.writerow([time_aggr[ii], lp_tot_stor[ss, ii, dd], lp_avg_stor[ss, ii, dd], lp_max_stor[ss, ii, dd], lp_med_stor[ss, ii, dd], lp_min_stor[ss, ii, dd]])
 
                 # Saving the random sample load profiles in a file, after giving a different time-step
-                filename = '{}_{}_{}_{}_{}_lps_sample.csv'.format(location, en_class, n_hh, season, day_nickname)
+                # filename = '{}_{}_{}_{}_{}_lps_sample.csv'.format(location, en_class, n_hh, season, day_nickname)
+                filename = '{}_{}_lps_sample.csv'.format(season, day_nickname)
                 fpath = basepath / dirname / subdirname / subsubdirname
 
                 with open(fpath / filename, mode = 'w', newline = '') as csv_file:
@@ -476,7 +478,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
                         csv_writer.writerow([time_sim[ii]] + list(lp_samp_stor[:, ss, ii, dd]))
                 
             # Saving the energy consumed by the appliances in each household, for each season
-            filename = '{}_{}_{}_{}_energy.csv'.format(location, en_class, n_hh, season)
+            # filename = '{}_{}_{}_{}_energy.csv'.format(location, en_class, n_hh, season)
+            filename = '{}_energy.csv'.format(season)
             fpath = basepath / dirname / subdirname / subsubdirname
             
             with open(fpath / filename, mode='w', newline='') as csv_file:
@@ -505,7 +508,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
         except Exception: pass
 
         # Creating a subfolder, if not already existing
-        subsubdirname = '{}_{}_{}'.format(location, en_class, n_hh)
+        subsubdirname = '{}_{}_{}_detailed_load_profiles'.format(location, en_class, n_hh)
 
         try: Path.mkdir(basepath / dirname / subdirname / subsubdirname)
         except Exception: pass
@@ -535,7 +538,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
                                 
             fig = plot.daily_profiles(time_aggr/60, powers/1000, plot_specs, fig_specs, **params)
 
-            filename = '{}_{}_{}_{}_aggr_loadprof.png'.format(location, en_class, season, n_hh)
+            # filename = '{}_{}_{}_{}_aggr_loadprof.png'.format(location, en_class, season, n_hh)
+            filename = '{}_aggr_loadprof.png'.format(season)
             fpath = basepath / dirname / subdirname / subsubdirname
             
             fig.savefig(fpath / filename) 
@@ -566,7 +570,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
             fig = plot.daily_profiles(time_aggr/60, powers/1000, plot_specs, fig_specs, **params)
 
-            filename = '{}_{}_{}_{}_avg_quant_loadprof.png'.format(location, en_class, season, n_hh)
+            # filename = '{}_{}_{}_{}_avg_quant_loadprof.png'.format(location, en_class, season, n_hh)
+            filename = '{}_avg_quant_loadprof.png'.format(season)
             fpath = basepath / dirname / subdirname / subsubdirname
             
             fig.savefig(fpath / filename)
@@ -590,7 +595,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
             fig = plot.daily_profiles(time_sim/60, powers/1000, plot_specs, fig_specs, **params)
 
-            filename = '{}_{}_{}_{}_sample_loadprof.png'.format(location, en_class, season, n_hh)
+            # filename = '{}_{}_{}_{}_sample_loadprof.png'.format(location, en_class, season, n_hh)
+            filename = '{}_sample_loadprof.png'.format(season)
             fpath = basepath / dirname / subdirname / subsubdirname
             
             fig.savefig(fpath / filename)
@@ -606,7 +612,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
         fig = plot.seasonal_energy(apps_ID, energies_season, fig_specs, appliances_data, **params)
 
-        filename = '{}_{}_{}_season_tot_energy_apps.png'.format(location, en_class, n_hh)
+        # filename = '{}_{}_{}_season_tot_energy_apps.png'.format(location, en_class, n_hh)
+        filename = 'season_tot_energy_apps.png'
         fpath = basepath / dirname / subdirname / subsubdirname
 
         fig.savefig(fpath / filename)
@@ -623,7 +630,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
         fig = plot.yearly_energy(apps_ID, energies_year, fig_specs, appliances_data, **params)
 
-        filename = '{}_{}_{}_year_tot_energy_apps.png'.format(location, en_class, n_hh)
+        # filename = '{}_{}_{}_year_tot_energy_apps.png'.format(location, en_class, n_hh)
+        filename = 'year_tot_energy_apps.png'
         fpath = basepath / dirname / subdirname / subsubdirname
 
         fig.savefig(fpath / filename)
@@ -642,7 +650,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
         fig = plot.yearly_energy(apps_ID, avg_energies, fig_specs, appliances_data, **params, energy_scale = 'kWh')
 
-        filename = '{}_{}_{}_year_avg_energy_apps.png'.format(location, en_class, n_hh)
+        # filename = '{}_{}_{}_year_avg_energy_apps.png'.format(location, en_class, n_hh)
+        filename = 'year_avg_energy_apps.png'
         fpath = basepath / dirname / subdirname / subsubdirname
 
         fig.savefig(fpath / filename)
@@ -677,7 +686,9 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
         energies_perc = energies_class/np.sum(energies_class)*100
         
         fig = plot.seasonal_energy_pie(apps_classes_labels, energies_perc, fig_specs, appliances_data, **params)
-        filename = '{}_{}_{}_season_perc_energy_apps.png'.format(location, en_class, n_hh)
+
+        # filename = '{}_{}_{}_season_perc_energy_apps.png'.format(location, en_class, n_hh)
+        filename = 'season_perc_energy_apps.png'
         fpath = basepath / dirname / subdirname / subsubdirname
 
         fig.savefig(fpath / filename)

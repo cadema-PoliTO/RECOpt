@@ -3,720 +3,720 @@ MINIMIZE
 1*grid_feed_0 + 1*grid_feed_1 + 1*grid_feed_10 + 1*grid_feed_11 + 1*grid_feed_12 + 1*grid_feed_13 + 1*grid_feed_14 + 1*grid_feed_15 + 1*grid_feed_16 + 1*grid_feed_17 + 1*grid_feed_18 + 1*grid_feed_19 + 1*grid_feed_2 + 1*grid_feed_20 + 1*grid_feed_21 + 1*grid_feed_22 + 1*grid_feed_23 + 1*grid_feed_3 + 1*grid_feed_4 + 1*grid_feed_5 + 1*grid_feed_6 + 1*grid_feed_7 + 1*grid_feed_8 + 1*grid_feed_9 + 1*grid_purchase_0 + 1*grid_purchase_1 + 1*grid_purchase_10 + 1*grid_purchase_11 + 1*grid_purchase_12 + 1*grid_purchase_13 + 1*grid_purchase_14 + 1*grid_purchase_15 + 1*grid_purchase_16 + 1*grid_purchase_17 + 1*grid_purchase_18 + 1*grid_purchase_19 + 1*grid_purchase_2 + 1*grid_purchase_20 + 1*grid_purchase_21 + 1*grid_purchase_22 + 1*grid_purchase_23 + 1*grid_purchase_3 + 1*grid_purchase_4 + 1*grid_purchase_5 + 1*grid_purchase_6 + 1*grid_purchase_7 + 1*grid_purchase_8 + 1*grid_purchase_9 + 0
 SUBJECT TO
 _C1: battery_charge_0 - battery_discharge_0 + grid_feed_0 - grid_purchase_0
- = -1.12577770999
+ = -3.81324153408
 
 _C2: 0.98 battery_charge_0 - 1.06382978723 battery_discharge_0
  + 0.999 battery_energy_0 - battery_energy_1 = 0
 
-_C3: grid_feed_0 - 30 grid_feed_state_0 <= 0
+_C3: grid_feed_0 - 60 grid_feed_state_0 <= 0
 
-_C4: grid_purchase_0 - 30 grid_purchase_state_0 <= 0
+_C4: grid_purchase_0 - 60 grid_purchase_state_0 <= 0
 
 _C5: grid_feed_state_0 + grid_purchase_state_0 >= 0
 
 _C6: grid_feed_state_0 + grid_purchase_state_0 <= 1
 
-_C7: battery_charge_0 - 2.83333333333 battery_charge_state_0 <= 0
+_C7: battery_charge_0 - 3.96666666667 battery_charge_state_0 <= 0
 
-_C8: battery_discharge_0 - 2.83333333333 battery_discharge_state_0 <= 0
+_C8: battery_discharge_0 - 3.96666666667 battery_discharge_state_0 <= 0
 
 _C9: battery_charge_state_0 + battery_discharge_state_0 >= 0
 
 _C10: battery_charge_state_0 + battery_discharge_state_0 <= 1
 
-_C11: battery_energy_0 <= 10
+_C11: battery_energy_0 <= 14
 
-_C12: battery_energy_0 >= 1.5
+_C12: battery_energy_0 >= 2.1
 
 _C13: grid_feed_0 <= 0
 
 _C14: battery_charge_0 <= 0
 
 _C15: battery_charge_1 - battery_discharge_1 + grid_feed_1 - grid_purchase_1
- = -0.883902054749
+ = -3.27833501293
 
 _C16: 0.98 battery_charge_1 - 1.06382978723 battery_discharge_1
  + 0.999 battery_energy_1 - battery_energy_2 = 0
 
-_C17: grid_feed_1 - 30 grid_feed_state_1 <= 0
+_C17: grid_feed_1 - 60 grid_feed_state_1 <= 0
 
-_C18: grid_purchase_1 - 30 grid_purchase_state_1 <= 0
+_C18: grid_purchase_1 - 60 grid_purchase_state_1 <= 0
 
 _C19: grid_feed_state_1 + grid_purchase_state_1 >= 0
 
 _C20: grid_feed_state_1 + grid_purchase_state_1 <= 1
 
-_C21: battery_charge_1 - 2.83333333333 battery_charge_state_1 <= 0
+_C21: battery_charge_1 - 3.96666666667 battery_charge_state_1 <= 0
 
-_C22: battery_discharge_1 - 2.83333333333 battery_discharge_state_1 <= 0
+_C22: battery_discharge_1 - 3.96666666667 battery_discharge_state_1 <= 0
 
 _C23: battery_charge_state_1 + battery_discharge_state_1 >= 0
 
 _C24: battery_charge_state_1 + battery_discharge_state_1 <= 1
 
-_C25: battery_energy_1 <= 10
+_C25: battery_energy_1 <= 14
 
-_C26: battery_energy_1 >= 1.5
+_C26: battery_energy_1 >= 2.1
 
 _C27: grid_feed_1 <= 0
 
 _C28: battery_charge_1 <= 0
 
 _C29: battery_charge_2 - battery_discharge_2 + grid_feed_2 - grid_purchase_2
- = -0.765745925245
+ = -2.37343215439
 
 _C30: 0.98 battery_charge_2 - 1.06382978723 battery_discharge_2
  + 0.999 battery_energy_2 - battery_energy_3 = 0
 
-_C31: grid_feed_2 - 30 grid_feed_state_2 <= 0
+_C31: grid_feed_2 - 60 grid_feed_state_2 <= 0
 
-_C32: grid_purchase_2 - 30 grid_purchase_state_2 <= 0
+_C32: grid_purchase_2 - 60 grid_purchase_state_2 <= 0
 
 _C33: grid_feed_state_2 + grid_purchase_state_2 >= 0
 
 _C34: grid_feed_state_2 + grid_purchase_state_2 <= 1
 
-_C35: battery_charge_2 - 2.83333333333 battery_charge_state_2 <= 0
+_C35: battery_charge_2 - 3.96666666667 battery_charge_state_2 <= 0
 
-_C36: battery_discharge_2 - 2.83333333333 battery_discharge_state_2 <= 0
+_C36: battery_discharge_2 - 3.96666666667 battery_discharge_state_2 <= 0
 
 _C37: battery_charge_state_2 + battery_discharge_state_2 >= 0
 
 _C38: battery_charge_state_2 + battery_discharge_state_2 <= 1
 
-_C39: battery_energy_2 <= 10
+_C39: battery_energy_2 <= 14
 
-_C40: battery_energy_2 >= 1.5
+_C40: battery_energy_2 >= 2.1
 
 _C41: grid_feed_2 <= 0
 
 _C42: battery_charge_2 <= 0
 
 _C43: battery_charge_3 - battery_discharge_3 + grid_feed_3 - grid_purchase_3
- = -0.868220104395
+ = -2.15579052084
 
 _C44: 0.98 battery_charge_3 - 1.06382978723 battery_discharge_3
  + 0.999 battery_energy_3 - battery_energy_4 = 0
 
-_C45: grid_feed_3 - 30 grid_feed_state_3 <= 0
+_C45: grid_feed_3 - 60 grid_feed_state_3 <= 0
 
-_C46: grid_purchase_3 - 30 grid_purchase_state_3 <= 0
+_C46: grid_purchase_3 - 60 grid_purchase_state_3 <= 0
 
 _C47: grid_feed_state_3 + grid_purchase_state_3 >= 0
 
 _C48: grid_feed_state_3 + grid_purchase_state_3 <= 1
 
-_C49: battery_charge_3 - 2.83333333333 battery_charge_state_3 <= 0
+_C49: battery_charge_3 - 3.96666666667 battery_charge_state_3 <= 0
 
-_C50: battery_discharge_3 - 2.83333333333 battery_discharge_state_3 <= 0
+_C50: battery_discharge_3 - 3.96666666667 battery_discharge_state_3 <= 0
 
 _C51: battery_charge_state_3 + battery_discharge_state_3 >= 0
 
 _C52: battery_charge_state_3 + battery_discharge_state_3 <= 1
 
-_C53: battery_energy_3 <= 10
+_C53: battery_energy_3 <= 14
 
-_C54: battery_energy_3 >= 1.5
+_C54: battery_energy_3 >= 2.1
 
 _C55: grid_feed_3 <= 0
 
 _C56: battery_charge_3 <= 0
 
 _C57: battery_charge_4 - battery_discharge_4 + grid_feed_4 - grid_purchase_4
- = -0.581027205914
+ = -1.40997818835
 
 _C58: 0.98 battery_charge_4 - 1.06382978723 battery_discharge_4
  + 0.999 battery_energy_4 - battery_energy_5 = 0
 
-_C59: grid_feed_4 - 30 grid_feed_state_4 <= 0
+_C59: grid_feed_4 - 60 grid_feed_state_4 <= 0
 
-_C60: grid_purchase_4 - 30 grid_purchase_state_4 <= 0
+_C60: grid_purchase_4 - 60 grid_purchase_state_4 <= 0
 
 _C61: grid_feed_state_4 + grid_purchase_state_4 >= 0
 
 _C62: grid_feed_state_4 + grid_purchase_state_4 <= 1
 
-_C63: battery_charge_4 - 2.83333333333 battery_charge_state_4 <= 0
+_C63: battery_charge_4 - 3.96666666667 battery_charge_state_4 <= 0
 
-_C64: battery_discharge_4 - 2.83333333333 battery_discharge_state_4 <= 0
+_C64: battery_discharge_4 - 3.96666666667 battery_discharge_state_4 <= 0
 
 _C65: battery_charge_state_4 + battery_discharge_state_4 >= 0
 
 _C66: battery_charge_state_4 + battery_discharge_state_4 <= 1
 
-_C67: battery_energy_4 <= 10
+_C67: battery_energy_4 <= 14
 
-_C68: battery_energy_4 >= 1.5
+_C68: battery_energy_4 >= 2.1
 
 _C69: grid_feed_4 <= 0
 
 _C70: battery_charge_4 <= 0
 
 _C71: battery_charge_5 - battery_discharge_5 + grid_feed_5 - grid_purchase_5
- = -0.832533811987
+ = -1.27372779961
 
 _C72: 0.98 battery_charge_5 - 1.06382978723 battery_discharge_5
  + 0.999 battery_energy_5 - battery_energy_6 = 0
 
-_C73: grid_feed_5 - 30 grid_feed_state_5 <= 0
+_C73: grid_feed_5 - 60 grid_feed_state_5 <= 0
 
-_C74: grid_purchase_5 - 30 grid_purchase_state_5 <= 0
+_C74: grid_purchase_5 - 60 grid_purchase_state_5 <= 0
 
 _C75: grid_feed_state_5 + grid_purchase_state_5 >= 0
 
 _C76: grid_feed_state_5 + grid_purchase_state_5 <= 1
 
-_C77: battery_charge_5 - 2.83333333333 battery_charge_state_5 <= 0
+_C77: battery_charge_5 - 3.96666666667 battery_charge_state_5 <= 0
 
-_C78: battery_discharge_5 - 2.83333333333 battery_discharge_state_5 <= 0
+_C78: battery_discharge_5 - 3.96666666667 battery_discharge_state_5 <= 0
 
 _C79: battery_charge_state_5 + battery_discharge_state_5 >= 0
 
 _C80: battery_charge_state_5 + battery_discharge_state_5 <= 1
 
-_C81: battery_energy_5 <= 10
+_C81: battery_energy_5 <= 14
 
-_C82: battery_energy_5 >= 1.5
+_C82: battery_energy_5 >= 2.1
 
 _C83: grid_feed_5 <= 0
 
 _C84: battery_charge_5 <= 0
 
 _C85: battery_charge_6 - battery_discharge_6 + grid_feed_6 - grid_purchase_6
- = -0.758790935235
+ = -1.846603283
 
 _C86: 0.98 battery_charge_6 - 1.06382978723 battery_discharge_6
  + 0.999 battery_energy_6 - battery_energy_7 = 0
 
-_C87: grid_feed_6 - 30 grid_feed_state_6 <= 0
+_C87: grid_feed_6 - 60 grid_feed_state_6 <= 0
 
-_C88: grid_purchase_6 - 30 grid_purchase_state_6 <= 0
+_C88: grid_purchase_6 - 60 grid_purchase_state_6 <= 0
 
 _C89: grid_feed_state_6 + grid_purchase_state_6 >= 0
 
 _C90: grid_feed_state_6 + grid_purchase_state_6 <= 1
 
-_C91: battery_charge_6 - 2.83333333333 battery_charge_state_6 <= 0
+_C91: battery_charge_6 - 3.96666666667 battery_charge_state_6 <= 0
 
-_C92: battery_discharge_6 - 2.83333333333 battery_discharge_state_6 <= 0
+_C92: battery_discharge_6 - 3.96666666667 battery_discharge_state_6 <= 0
 
 _C93: battery_charge_state_6 + battery_discharge_state_6 >= 0
 
 _C94: battery_charge_state_6 + battery_discharge_state_6 <= 1
 
-_C95: battery_energy_6 <= 10
+_C95: battery_energy_6 <= 14
 
-_C96: battery_energy_6 >= 1.5
+_C96: battery_energy_6 >= 2.1
 
 _C97: grid_feed_6 <= 0
 
 _C98: battery_charge_6 <= 0
 
 _C99: battery_charge_7 - battery_discharge_7 + grid_feed_7 - grid_purchase_7
- = -1.00415737862
+ = -1.89702615528
 
 _C100: 0.98 battery_charge_7 - 1.06382978723 battery_discharge_7
  + 0.999 battery_energy_7 - battery_energy_8 = 0
 
-_C101: grid_feed_7 - 30 grid_feed_state_7 <= 0
+_C101: grid_feed_7 - 60 grid_feed_state_7 <= 0
 
-_C102: grid_purchase_7 - 30 grid_purchase_state_7 <= 0
+_C102: grid_purchase_7 - 60 grid_purchase_state_7 <= 0
 
 _C103: grid_feed_state_7 + grid_purchase_state_7 >= 0
 
 _C104: grid_feed_state_7 + grid_purchase_state_7 <= 1
 
-_C105: battery_charge_7 - 2.83333333333 battery_charge_state_7 <= 0
+_C105: battery_charge_7 - 3.96666666667 battery_charge_state_7 <= 0
 
-_C106: battery_discharge_7 - 2.83333333333 battery_discharge_state_7 <= 0
+_C106: battery_discharge_7 - 3.96666666667 battery_discharge_state_7 <= 0
 
 _C107: battery_charge_state_7 + battery_discharge_state_7 >= 0
 
 _C108: battery_charge_state_7 + battery_discharge_state_7 <= 1
 
-_C109: battery_energy_7 <= 10
+_C109: battery_energy_7 <= 14
 
-_C110: battery_energy_7 >= 1.5
+_C110: battery_energy_7 >= 2.1
 
 _C111: grid_feed_7 <= 0
 
 _C112: battery_charge_7 <= 0
 
 _C113: battery_charge_8 - battery_discharge_8 + grid_feed_8 - grid_purchase_8
- = 0.399455802268
+ = 0.0815223937811
 
 _C114: 0.98 battery_charge_8 - 1.06382978723 battery_discharge_8
  + 0.999 battery_energy_8 - battery_energy_9 = 0
 
-_C115: grid_feed_8 - 30 grid_feed_state_8 <= 0
+_C115: grid_feed_8 - 60 grid_feed_state_8 <= 0
 
-_C116: grid_purchase_8 - 30 grid_purchase_state_8 <= 0
+_C116: grid_purchase_8 - 60 grid_purchase_state_8 <= 0
 
 _C117: grid_feed_state_8 + grid_purchase_state_8 >= 0
 
 _C118: grid_feed_state_8 + grid_purchase_state_8 <= 1
 
-_C119: battery_charge_8 - 2.83333333333 battery_charge_state_8 <= 0
+_C119: battery_charge_8 - 3.96666666667 battery_charge_state_8 <= 0
 
-_C120: battery_discharge_8 - 2.83333333333 battery_discharge_state_8 <= 0
+_C120: battery_discharge_8 - 3.96666666667 battery_discharge_state_8 <= 0
 
 _C121: battery_charge_state_8 + battery_discharge_state_8 >= 0
 
 _C122: battery_charge_state_8 + battery_discharge_state_8 <= 1
 
-_C123: battery_energy_8 <= 10
+_C123: battery_energy_8 <= 14
 
-_C124: battery_energy_8 >= 1.5
+_C124: battery_energy_8 >= 2.1
 
-_C125: grid_feed_8 <= 0.399455802268
+_C125: grid_feed_8 <= 0.0815223937811
 
-_C126: battery_charge_8 <= 0.399455802268
+_C126: battery_charge_8 <= 0.0815223937811
 
 _C127: battery_charge_9 - battery_discharge_9 + grid_feed_9 - grid_purchase_9
- = 0.825589617094
+ = 1.07401265549
 
 _C128: 0.98 battery_charge_9 - 1.06382978723 battery_discharge_9
  - battery_energy_10 + 0.999 battery_energy_9 = 0
 
-_C129: grid_feed_9 - 30 grid_feed_state_9 <= 0
+_C129: grid_feed_9 - 60 grid_feed_state_9 <= 0
 
-_C130: grid_purchase_9 - 30 grid_purchase_state_9 <= 0
+_C130: grid_purchase_9 - 60 grid_purchase_state_9 <= 0
 
 _C131: grid_feed_state_9 + grid_purchase_state_9 >= 0
 
 _C132: grid_feed_state_9 + grid_purchase_state_9 <= 1
 
-_C133: battery_charge_9 - 2.83333333333 battery_charge_state_9 <= 0
+_C133: battery_charge_9 - 3.96666666667 battery_charge_state_9 <= 0
 
-_C134: battery_discharge_9 - 2.83333333333 battery_discharge_state_9 <= 0
+_C134: battery_discharge_9 - 3.96666666667 battery_discharge_state_9 <= 0
 
 _C135: battery_charge_state_9 + battery_discharge_state_9 >= 0
 
 _C136: battery_charge_state_9 + battery_discharge_state_9 <= 1
 
-_C137: battery_energy_9 <= 10
+_C137: battery_energy_9 <= 14
 
-_C138: battery_energy_9 >= 1.5
+_C138: battery_energy_9 >= 2.1
 
-_C139: grid_feed_9 <= 0.825589617094
+_C139: grid_feed_9 <= 1.07401265549
 
-_C140: battery_charge_9 <= 0.825589617094
+_C140: battery_charge_9 <= 1.07401265549
 
 _C141: battery_charge_10 - battery_discharge_10 + grid_feed_10
- - grid_purchase_10 = 2.20511828515
+ - grid_purchase_10 = 3.19263311017
 
 _C142: 0.98 battery_charge_10 - 1.06382978723 battery_discharge_10
  + 0.999 battery_energy_10 - battery_energy_11 = 0
 
-_C143: grid_feed_10 - 30 grid_feed_state_10 <= 0
+_C143: grid_feed_10 - 60 grid_feed_state_10 <= 0
 
-_C144: grid_purchase_10 - 30 grid_purchase_state_10 <= 0
+_C144: grid_purchase_10 - 60 grid_purchase_state_10 <= 0
 
 _C145: grid_feed_state_10 + grid_purchase_state_10 >= 0
 
 _C146: grid_feed_state_10 + grid_purchase_state_10 <= 1
 
-_C147: battery_charge_10 - 2.83333333333 battery_charge_state_10 <= 0
+_C147: battery_charge_10 - 3.96666666667 battery_charge_state_10 <= 0
 
-_C148: battery_discharge_10 - 2.83333333333 battery_discharge_state_10 <= 0
+_C148: battery_discharge_10 - 3.96666666667 battery_discharge_state_10 <= 0
 
 _C149: battery_charge_state_10 + battery_discharge_state_10 >= 0
 
 _C150: battery_charge_state_10 + battery_discharge_state_10 <= 1
 
-_C151: battery_energy_10 <= 10
+_C151: battery_energy_10 <= 14
 
-_C152: battery_energy_10 >= 1.5
+_C152: battery_energy_10 >= 2.1
 
-_C153: grid_feed_10 <= 2.20511828515
+_C153: grid_feed_10 <= 3.19263311017
 
-_C154: battery_charge_10 <= 2.20511828515
+_C154: battery_charge_10 <= 3.19263311017
 
 _C155: battery_charge_11 - battery_discharge_11 + grid_feed_11
- - grid_purchase_11 = 1.75044764161
+ - grid_purchase_11 = 3.21944621035
 
 _C156: 0.98 battery_charge_11 - 1.06382978723 battery_discharge_11
  + 0.999 battery_energy_11 - battery_energy_12 = 0
 
-_C157: grid_feed_11 - 30 grid_feed_state_11 <= 0
+_C157: grid_feed_11 - 60 grid_feed_state_11 <= 0
 
-_C158: grid_purchase_11 - 30 grid_purchase_state_11 <= 0
+_C158: grid_purchase_11 - 60 grid_purchase_state_11 <= 0
 
 _C159: grid_feed_state_11 + grid_purchase_state_11 >= 0
 
 _C160: grid_feed_state_11 + grid_purchase_state_11 <= 1
 
-_C161: battery_charge_11 - 2.83333333333 battery_charge_state_11 <= 0
+_C161: battery_charge_11 - 3.96666666667 battery_charge_state_11 <= 0
 
-_C162: battery_discharge_11 - 2.83333333333 battery_discharge_state_11 <= 0
+_C162: battery_discharge_11 - 3.96666666667 battery_discharge_state_11 <= 0
 
 _C163: battery_charge_state_11 + battery_discharge_state_11 >= 0
 
 _C164: battery_charge_state_11 + battery_discharge_state_11 <= 1
 
-_C165: battery_energy_11 <= 10
+_C165: battery_energy_11 <= 14
 
-_C166: battery_energy_11 >= 1.5
+_C166: battery_energy_11 >= 2.1
 
-_C167: grid_feed_11 <= 1.75044764161
+_C167: grid_feed_11 <= 3.21944621035
 
-_C168: battery_charge_11 <= 1.75044764161
+_C168: battery_charge_11 <= 3.21944621035
 
 _C169: battery_charge_12 - battery_discharge_12 + grid_feed_12
- - grid_purchase_12 = 1.52541268031
+ - grid_purchase_12 = 2.65828308542
 
 _C170: 0.98 battery_charge_12 - 1.06382978723 battery_discharge_12
  + 0.999 battery_energy_12 - battery_energy_13 = 0
 
-_C171: grid_feed_12 - 30 grid_feed_state_12 <= 0
+_C171: grid_feed_12 - 60 grid_feed_state_12 <= 0
 
-_C172: grid_purchase_12 - 30 grid_purchase_state_12 <= 0
+_C172: grid_purchase_12 - 60 grid_purchase_state_12 <= 0
 
 _C173: grid_feed_state_12 + grid_purchase_state_12 >= 0
 
 _C174: grid_feed_state_12 + grid_purchase_state_12 <= 1
 
-_C175: battery_charge_12 - 2.83333333333 battery_charge_state_12 <= 0
+_C175: battery_charge_12 - 3.96666666667 battery_charge_state_12 <= 0
 
-_C176: battery_discharge_12 - 2.83333333333 battery_discharge_state_12 <= 0
+_C176: battery_discharge_12 - 3.96666666667 battery_discharge_state_12 <= 0
 
 _C177: battery_charge_state_12 + battery_discharge_state_12 >= 0
 
 _C178: battery_charge_state_12 + battery_discharge_state_12 <= 1
 
-_C179: battery_energy_12 <= 10
+_C179: battery_energy_12 <= 14
 
-_C180: battery_energy_12 >= 1.5
+_C180: battery_energy_12 >= 2.1
 
-_C181: grid_feed_12 <= 1.52541268031
+_C181: grid_feed_12 <= 2.65828308542
 
-_C182: battery_charge_12 <= 1.52541268031
+_C182: battery_charge_12 <= 2.65828308542
 
 _C183: battery_charge_13 - battery_discharge_13 + grid_feed_13
- - grid_purchase_13 = 0.341619069287
+ - grid_purchase_13 = 1.07840371638
 
 _C184: 0.98 battery_charge_13 - 1.06382978723 battery_discharge_13
  + 0.999 battery_energy_13 - battery_energy_14 = 0
 
-_C185: grid_feed_13 - 30 grid_feed_state_13 <= 0
+_C185: grid_feed_13 - 60 grid_feed_state_13 <= 0
 
-_C186: grid_purchase_13 - 30 grid_purchase_state_13 <= 0
+_C186: grid_purchase_13 - 60 grid_purchase_state_13 <= 0
 
 _C187: grid_feed_state_13 + grid_purchase_state_13 >= 0
 
 _C188: grid_feed_state_13 + grid_purchase_state_13 <= 1
 
-_C189: battery_charge_13 - 2.83333333333 battery_charge_state_13 <= 0
+_C189: battery_charge_13 - 3.96666666667 battery_charge_state_13 <= 0
 
-_C190: battery_discharge_13 - 2.83333333333 battery_discharge_state_13 <= 0
+_C190: battery_discharge_13 - 3.96666666667 battery_discharge_state_13 <= 0
 
 _C191: battery_charge_state_13 + battery_discharge_state_13 >= 0
 
 _C192: battery_charge_state_13 + battery_discharge_state_13 <= 1
 
-_C193: battery_energy_13 <= 10
+_C193: battery_energy_13 <= 14
 
-_C194: battery_energy_13 >= 1.5
+_C194: battery_energy_13 >= 2.1
 
-_C195: grid_feed_13 <= 0.341619069287
+_C195: grid_feed_13 <= 1.07840371638
 
-_C196: battery_charge_13 <= 0.341619069287
+_C196: battery_charge_13 <= 1.07840371638
 
 _C197: battery_charge_14 - battery_discharge_14 + grid_feed_14
- - grid_purchase_14 = -1.17600482309
+ - grid_purchase_14 = -1.06587579432
 
 _C198: 0.98 battery_charge_14 - 1.06382978723 battery_discharge_14
  + 0.999 battery_energy_14 - battery_energy_15 = 0
 
-_C199: grid_feed_14 - 30 grid_feed_state_14 <= 0
+_C199: grid_feed_14 - 60 grid_feed_state_14 <= 0
 
-_C200: grid_purchase_14 - 30 grid_purchase_state_14 <= 0
+_C200: grid_purchase_14 - 60 grid_purchase_state_14 <= 0
 
 _C201: grid_feed_state_14 + grid_purchase_state_14 >= 0
 
 _C202: grid_feed_state_14 + grid_purchase_state_14 <= 1
 
-_C203: battery_charge_14 - 2.83333333333 battery_charge_state_14 <= 0
+_C203: battery_charge_14 - 3.96666666667 battery_charge_state_14 <= 0
 
-_C204: battery_discharge_14 - 2.83333333333 battery_discharge_state_14 <= 0
+_C204: battery_discharge_14 - 3.96666666667 battery_discharge_state_14 <= 0
 
 _C205: battery_charge_state_14 + battery_discharge_state_14 >= 0
 
 _C206: battery_charge_state_14 + battery_discharge_state_14 <= 1
 
-_C207: battery_energy_14 <= 10
+_C207: battery_energy_14 <= 14
 
-_C208: battery_energy_14 >= 1.5
+_C208: battery_energy_14 >= 2.1
 
 _C209: grid_feed_14 <= 0
 
 _C210: battery_charge_14 <= 0
 
 _C211: battery_charge_15 - battery_discharge_15 + grid_feed_15
- - grid_purchase_15 = -2.23101354099
+ - grid_purchase_15 = -3.17381828743
 
 _C212: 0.98 battery_charge_15 - 1.06382978723 battery_discharge_15
  + 0.999 battery_energy_15 - battery_energy_16 = 0
 
-_C213: grid_feed_15 - 30 grid_feed_state_15 <= 0
+_C213: grid_feed_15 - 60 grid_feed_state_15 <= 0
 
-_C214: grid_purchase_15 - 30 grid_purchase_state_15 <= 0
+_C214: grid_purchase_15 - 60 grid_purchase_state_15 <= 0
 
 _C215: grid_feed_state_15 + grid_purchase_state_15 >= 0
 
 _C216: grid_feed_state_15 + grid_purchase_state_15 <= 1
 
-_C217: battery_charge_15 - 2.83333333333 battery_charge_state_15 <= 0
+_C217: battery_charge_15 - 3.96666666667 battery_charge_state_15 <= 0
 
-_C218: battery_discharge_15 - 2.83333333333 battery_discharge_state_15 <= 0
+_C218: battery_discharge_15 - 3.96666666667 battery_discharge_state_15 <= 0
 
 _C219: battery_charge_state_15 + battery_discharge_state_15 >= 0
 
 _C220: battery_charge_state_15 + battery_discharge_state_15 <= 1
 
-_C221: battery_energy_15 <= 10
+_C221: battery_energy_15 <= 14
 
-_C222: battery_energy_15 >= 1.5
+_C222: battery_energy_15 >= 2.1
 
 _C223: grid_feed_15 <= 0
 
 _C224: battery_charge_15 <= 0
 
 _C225: battery_charge_16 - battery_discharge_16 + grid_feed_16
- - grid_purchase_16 = -2.89333128443
+ - grid_purchase_16 = -4.09272753902
 
 _C226: 0.98 battery_charge_16 - 1.06382978723 battery_discharge_16
  + 0.999 battery_energy_16 - battery_energy_17 = 0
 
-_C227: grid_feed_16 - 30 grid_feed_state_16 <= 0
+_C227: grid_feed_16 - 60 grid_feed_state_16 <= 0
 
-_C228: grid_purchase_16 - 30 grid_purchase_state_16 <= 0
+_C228: grid_purchase_16 - 60 grid_purchase_state_16 <= 0
 
 _C229: grid_feed_state_16 + grid_purchase_state_16 >= 0
 
 _C230: grid_feed_state_16 + grid_purchase_state_16 <= 1
 
-_C231: battery_charge_16 - 2.83333333333 battery_charge_state_16 <= 0
+_C231: battery_charge_16 - 3.96666666667 battery_charge_state_16 <= 0
 
-_C232: battery_discharge_16 - 2.83333333333 battery_discharge_state_16 <= 0
+_C232: battery_discharge_16 - 3.96666666667 battery_discharge_state_16 <= 0
 
 _C233: battery_charge_state_16 + battery_discharge_state_16 >= 0
 
 _C234: battery_charge_state_16 + battery_discharge_state_16 <= 1
 
-_C235: battery_energy_16 <= 10
+_C235: battery_energy_16 <= 14
 
-_C236: battery_energy_16 >= 1.5
+_C236: battery_energy_16 >= 2.1
 
 _C237: grid_feed_16 <= 0
 
 _C238: battery_charge_16 <= 0
 
 _C239: battery_charge_17 - battery_discharge_17 + grid_feed_17
- - grid_purchase_17 = -2.72027044282
+ - grid_purchase_17 = -4.08105569887
 
 _C240: 0.98 battery_charge_17 - 1.06382978723 battery_discharge_17
  + 0.999 battery_energy_17 - battery_energy_18 = 0
 
-_C241: grid_feed_17 - 30 grid_feed_state_17 <= 0
+_C241: grid_feed_17 - 60 grid_feed_state_17 <= 0
 
-_C242: grid_purchase_17 - 30 grid_purchase_state_17 <= 0
+_C242: grid_purchase_17 - 60 grid_purchase_state_17 <= 0
 
 _C243: grid_feed_state_17 + grid_purchase_state_17 >= 0
 
 _C244: grid_feed_state_17 + grid_purchase_state_17 <= 1
 
-_C245: battery_charge_17 - 2.83333333333 battery_charge_state_17 <= 0
+_C245: battery_charge_17 - 3.96666666667 battery_charge_state_17 <= 0
 
-_C246: battery_discharge_17 - 2.83333333333 battery_discharge_state_17 <= 0
+_C246: battery_discharge_17 - 3.96666666667 battery_discharge_state_17 <= 0
 
 _C247: battery_charge_state_17 + battery_discharge_state_17 >= 0
 
 _C248: battery_charge_state_17 + battery_discharge_state_17 <= 1
 
-_C249: battery_energy_17 <= 10
+_C249: battery_energy_17 <= 14
 
-_C250: battery_energy_17 >= 1.5
+_C250: battery_energy_17 >= 2.1
 
 _C251: grid_feed_17 <= 0
 
 _C252: battery_charge_17 <= 0
 
 _C253: battery_charge_18 - battery_discharge_18 + grid_feed_18
- - grid_purchase_18 = -2.52214703085
+ - grid_purchase_18 = -4.4005935055
 
 _C254: 0.98 battery_charge_18 - 1.06382978723 battery_discharge_18
  + 0.999 battery_energy_18 - battery_energy_19 = 0
 
-_C255: grid_feed_18 - 30 grid_feed_state_18 <= 0
+_C255: grid_feed_18 - 60 grid_feed_state_18 <= 0
 
-_C256: grid_purchase_18 - 30 grid_purchase_state_18 <= 0
+_C256: grid_purchase_18 - 60 grid_purchase_state_18 <= 0
 
 _C257: grid_feed_state_18 + grid_purchase_state_18 >= 0
 
 _C258: grid_feed_state_18 + grid_purchase_state_18 <= 1
 
-_C259: battery_charge_18 - 2.83333333333 battery_charge_state_18 <= 0
+_C259: battery_charge_18 - 3.96666666667 battery_charge_state_18 <= 0
 
-_C260: battery_discharge_18 - 2.83333333333 battery_discharge_state_18 <= 0
+_C260: battery_discharge_18 - 3.96666666667 battery_discharge_state_18 <= 0
 
 _C261: battery_charge_state_18 + battery_discharge_state_18 >= 0
 
 _C262: battery_charge_state_18 + battery_discharge_state_18 <= 1
 
-_C263: battery_energy_18 <= 10
+_C263: battery_energy_18 <= 14
 
-_C264: battery_energy_18 >= 1.5
+_C264: battery_energy_18 >= 2.1
 
 _C265: grid_feed_18 <= 0
 
 _C266: battery_charge_18 <= 0
 
 _C267: battery_charge_19 - battery_discharge_19 + grid_feed_19
- - grid_purchase_19 = -2.99751269184
+ - grid_purchase_19 = -5.06807110847
 
 _C268: 0.98 battery_charge_19 - 1.06382978723 battery_discharge_19
  + 0.999 battery_energy_19 - battery_energy_20 = 0
 
-_C269: grid_feed_19 - 30 grid_feed_state_19 <= 0
+_C269: grid_feed_19 - 60 grid_feed_state_19 <= 0
 
-_C270: grid_purchase_19 - 30 grid_purchase_state_19 <= 0
+_C270: grid_purchase_19 - 60 grid_purchase_state_19 <= 0
 
 _C271: grid_feed_state_19 + grid_purchase_state_19 >= 0
 
 _C272: grid_feed_state_19 + grid_purchase_state_19 <= 1
 
-_C273: battery_charge_19 - 2.83333333333 battery_charge_state_19 <= 0
+_C273: battery_charge_19 - 3.96666666667 battery_charge_state_19 <= 0
 
-_C274: battery_discharge_19 - 2.83333333333 battery_discharge_state_19 <= 0
+_C274: battery_discharge_19 - 3.96666666667 battery_discharge_state_19 <= 0
 
 _C275: battery_charge_state_19 + battery_discharge_state_19 >= 0
 
 _C276: battery_charge_state_19 + battery_discharge_state_19 <= 1
 
-_C277: battery_energy_19 <= 10
+_C277: battery_energy_19 <= 14
 
-_C278: battery_energy_19 >= 1.5
+_C278: battery_energy_19 >= 2.1
 
 _C279: grid_feed_19 <= 0
 
 _C280: battery_charge_19 <= 0
 
 _C281: battery_charge_20 - battery_discharge_20 + grid_feed_20
- - grid_purchase_20 = -3.17027930576
+ - grid_purchase_20 = -4.9120582689
 
 _C282: 0.98 battery_charge_20 - 1.06382978723 battery_discharge_20
  + 0.999 battery_energy_20 - battery_energy_21 = 0
 
-_C283: grid_feed_20 - 30 grid_feed_state_20 <= 0
+_C283: grid_feed_20 - 60 grid_feed_state_20 <= 0
 
-_C284: grid_purchase_20 - 30 grid_purchase_state_20 <= 0
+_C284: grid_purchase_20 - 60 grid_purchase_state_20 <= 0
 
 _C285: grid_feed_state_20 + grid_purchase_state_20 >= 0
 
 _C286: grid_feed_state_20 + grid_purchase_state_20 <= 1
 
-_C287: battery_charge_20 - 2.83333333333 battery_charge_state_20 <= 0
+_C287: battery_charge_20 - 3.96666666667 battery_charge_state_20 <= 0
 
-_C288: battery_discharge_20 - 2.83333333333 battery_discharge_state_20 <= 0
+_C288: battery_discharge_20 - 3.96666666667 battery_discharge_state_20 <= 0
 
 _C289: battery_charge_state_20 + battery_discharge_state_20 >= 0
 
 _C290: battery_charge_state_20 + battery_discharge_state_20 <= 1
 
-_C291: battery_energy_20 <= 10
+_C291: battery_energy_20 <= 14
 
-_C292: battery_energy_20 >= 1.5
+_C292: battery_energy_20 >= 2.1
 
 _C293: grid_feed_20 <= 0
 
 _C294: battery_charge_20 <= 0
 
 _C295: battery_charge_21 - battery_discharge_21 + grid_feed_21
- - grid_purchase_21 = -2.576074359
+ - grid_purchase_21 = -5.54017524634
 
 _C296: 0.98 battery_charge_21 - 1.06382978723 battery_discharge_21
  + 0.999 battery_energy_21 - battery_energy_22 = 0
 
-_C297: grid_feed_21 - 30 grid_feed_state_21 <= 0
+_C297: grid_feed_21 - 60 grid_feed_state_21 <= 0
 
-_C298: grid_purchase_21 - 30 grid_purchase_state_21 <= 0
+_C298: grid_purchase_21 - 60 grid_purchase_state_21 <= 0
 
 _C299: grid_feed_state_21 + grid_purchase_state_21 >= 0
 
 _C300: grid_feed_state_21 + grid_purchase_state_21 <= 1
 
-_C301: battery_charge_21 - 2.83333333333 battery_charge_state_21 <= 0
+_C301: battery_charge_21 - 3.96666666667 battery_charge_state_21 <= 0
 
-_C302: battery_discharge_21 - 2.83333333333 battery_discharge_state_21 <= 0
+_C302: battery_discharge_21 - 3.96666666667 battery_discharge_state_21 <= 0
 
 _C303: battery_charge_state_21 + battery_discharge_state_21 >= 0
 
 _C304: battery_charge_state_21 + battery_discharge_state_21 <= 1
 
-_C305: battery_energy_21 <= 10
+_C305: battery_energy_21 <= 14
 
-_C306: battery_energy_21 >= 1.5
+_C306: battery_energy_21 >= 2.1
 
 _C307: grid_feed_21 <= 0
 
 _C308: battery_charge_21 <= 0
 
 _C309: battery_charge_22 - battery_discharge_22 + grid_feed_22
- - grid_purchase_22 = -2.22934862127
+ - grid_purchase_22 = -6.43803564774
 
 _C310: 0.98 battery_charge_22 - 1.06382978723 battery_discharge_22
  + 0.999 battery_energy_22 - battery_energy_23 = 0
 
-_C311: grid_feed_22 - 30 grid_feed_state_22 <= 0
+_C311: grid_feed_22 - 60 grid_feed_state_22 <= 0
 
-_C312: grid_purchase_22 - 30 grid_purchase_state_22 <= 0
+_C312: grid_purchase_22 - 60 grid_purchase_state_22 <= 0
 
 _C313: grid_feed_state_22 + grid_purchase_state_22 >= 0
 
 _C314: grid_feed_state_22 + grid_purchase_state_22 <= 1
 
-_C315: battery_charge_22 - 2.83333333333 battery_charge_state_22 <= 0
+_C315: battery_charge_22 - 3.96666666667 battery_charge_state_22 <= 0
 
-_C316: battery_discharge_22 - 2.83333333333 battery_discharge_state_22 <= 0
+_C316: battery_discharge_22 - 3.96666666667 battery_discharge_state_22 <= 0
 
 _C317: battery_charge_state_22 + battery_discharge_state_22 >= 0
 
 _C318: battery_charge_state_22 + battery_discharge_state_22 <= 1
 
-_C319: battery_energy_22 <= 10
+_C319: battery_energy_22 <= 14
 
-_C320: battery_energy_22 >= 1.5
+_C320: battery_energy_22 >= 2.1
 
 _C321: grid_feed_22 <= 0
 
 _C322: battery_charge_22 <= 0
 
 _C323: battery_charge_23 - battery_discharge_23 + grid_feed_23
- - grid_purchase_23 = -1.76221939379
+ - grid_purchase_23 = -5.89704641969
 
 _C324: 0.98 battery_charge_23 - 1.06382978723 battery_discharge_23
  - battery_energy_0 + 0.999 battery_energy_23 = 0
 
-_C325: grid_feed_23 - 30 grid_feed_state_23 <= 0
+_C325: grid_feed_23 - 60 grid_feed_state_23 <= 0
 
-_C326: grid_purchase_23 - 30 grid_purchase_state_23 <= 0
+_C326: grid_purchase_23 - 60 grid_purchase_state_23 <= 0
 
 _C327: grid_feed_state_23 + grid_purchase_state_23 >= 0
 
 _C328: grid_feed_state_23 + grid_purchase_state_23 <= 1
 
-_C329: battery_charge_23 - 2.83333333333 battery_charge_state_23 <= 0
+_C329: battery_charge_23 - 3.96666666667 battery_charge_state_23 <= 0
 
-_C330: battery_discharge_23 - 2.83333333333 battery_discharge_state_23 <= 0
+_C330: battery_discharge_23 - 3.96666666667 battery_discharge_state_23 <= 0
 
 _C331: battery_charge_state_23 + battery_discharge_state_23 >= 0
 
 _C332: battery_charge_state_23 + battery_discharge_state_23 <= 1
 
-_C333: battery_energy_23 <= 10
+_C333: battery_energy_23 <= 14
 
-_C334: battery_energy_23 >= 1.5
+_C334: battery_energy_23 >= 2.1
 
 _C335: grid_feed_23 <= 0
 
