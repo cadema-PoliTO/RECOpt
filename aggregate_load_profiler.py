@@ -13,10 +13,10 @@ import csv
 from pathlib import Path
 
 import datareader
-import parameters_input as inp
+# import parameters_input as inp
 import plot_generator  as plot
 from house_load_profiler import house_load_profiler as hlp
-from load_profile_aggregator import aggregator as agr
+from load_profile_aggregator_trapz import aggregator
 from tictoc import tic, toc
 
 ###############################################################################
@@ -98,18 +98,29 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
 
     ### Starting the simulation
-
+     
 
     ## Time 
     # Time discretization for the simulation    
 
-    # Time-step, total time and vector of time from 00:00 to 23:59 (one day) (min)
-    dt = 1 
-    time = 1440 
-    time_sim = np.arange(0,time,dt) 
+    # Time-step (min) 
+    dt = 1
+
+    # Total time of simulation (min) 
+    time = 1440
+
+    # Vector of time from 00:00 to 23:59 (one day) (min)
+    time_sim = np.arange(0, time, dt)  
 
     # Time vector for the aggregation of the results (min)
-    time_aggr = np.arange(0,time,dt_aggr) 
+    time_aggr = np.arange(0, time, dt_aggr) 
+
+    # Creating a dictionary to be passed to the various methods, containing the time discretization
+    time_dict = {
+        'time': time,
+        'dt': dt,
+        'time_sim': time_sim,
+        }
 
 
     ## Input data for the appliances
@@ -370,13 +381,13 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
             # The house_load_profiler routine is applied to each household
             for household in range(0, n_hh):
                 households_lp[:, household], apps_energy[:, household] = \
-                    hlp(apps_availability[:, household], day_nickname, season_nickname, appliances_data, **params)
+                    hlp(time_dict, apps_availability[:, household], day_nickname, season_nickname, appliances_data, **params)
 
 
             ## Aggregating the load profiles and storing the results
         
             # Aggregating the load profiles with a different timestep
-            aggr_households_lp = agr(households_lp, dt_aggr)
+            aggr_households_lp = aggregator(time_dict, households_lp, dt_aggr)
 
             # Evaluating the sum of all the load profiles, for each time-step
             aggregate_lp = np.sum(aggr_households_lp, axis = 1) 
@@ -406,9 +417,9 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
             # multiplied by the number of days of this type present in the season 
             n_days_season = days_distr[season][day]
             energy_stor[ss, :, :] += apps_energy*n_days_season
-
-
-
+    
+    # print('Yearly energy from integration of load profiles:{} kWh/year'.format(np.sum(energy_stor)/1000))
+    
     ### Saving the results as .csv files
 
     if file_store_flag == 1:
@@ -506,20 +517,23 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
             ss = seasons[season][0]
 
-            # Total load profiles       
+            # Total load profiles  
             plot_specs = {
-                0: ['bar', 'Total'],
+                0: {'plot_type': 'bar', 'plot_yaxis': 'left', 'plot_label': 'Total', 'plot_color': 'c', 'plot_alpha': 0.8},
                 }
 
             fig_specs = {
                 'suptitle': '\n'.join(('\nTotal load profile during one day', \
                             'for {} households with {} energetic class in the {} of Italy'\
                             .format(n_hh, en_class, location.capitalize()))),
-            }
+                'xaxis_label': 'Time (h)',
+                'yaxis_left_label': 'Power (kW)',
+                'title': season,
+                }
 
             powers = lp_tot_stor[np.newaxis, ss, :, :]
                                 
-            fig = plot.seasonal_load_profiles(time_aggr, powers, season, plot_specs, fig_specs, appliances_data, **params)
+            fig = plot.daily_profiles(time_aggr/60, powers/1000, plot_specs, fig_specs, **params)
 
             filename = '{}_{}_{}_{}_aggr_loadprof.png'.format(location, en_class, season, n_hh)
             fpath = basepath / dirname / subdirname / subsubdirname
@@ -529,17 +543,20 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
             # Average load profile and quantiles
             plot_specs = {
-            0: ['plot', 'Average'],
-            1: ['bar', 'Max'],
-            2: ['bar', 'Med'],
-            3: ['bar', 'Min']
-            }
+                0: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'Average', 'plot_color': 'r', 'plot_linestyle': '-', 'plot_marker': 's'},
+                1: {'plot_type': 'bar', 'plot_yaxis': 'left', 'plot_label': 'Max', 'plot_alpha': 0.8},
+                2: {'plot_type': 'bar', 'plot_yaxis': 'left', 'plot_label': 'Med', 'plot_alpha': 0.8},
+                3: {'plot_type': 'bar', 'plot_yaxis': 'left', 'plot_label': 'Min', 'plot_alpha': 0.8},
+                }
 
             fig_specs = {
                 'suptitle': '\n'.join(('\nAverage load profile and quantile during one day', \
                             'for {} households with {} energetic class in the {} of Italy'\
                             .format(n_hh, en_class, location.capitalize()))),
-            }
+                'xaxis_label': 'Time (h)',
+                'yaxis_left_label': 'Power (kW)',
+                'title': season,
+                }
 
             powers = np.stack((lp_avg_stor[ss, :, :],
                             lp_max_stor[ss, :, :],
@@ -547,7 +564,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
                             lp_min_stor[ss, :, :]),
                             axis = 0)
 
-            fig = plot.seasonal_load_profiles(time_aggr, powers, season, plot_specs, fig_specs, appliances_data, **params)
+            fig = plot.daily_profiles(time_aggr/60, powers/1000, plot_specs, fig_specs, **params)
 
             filename = '{}_{}_{}_{}_avg_quant_loadprof.png'.format(location, en_class, season, n_hh)
             fpath = basepath / dirname / subdirname / subsubdirname
@@ -558,17 +575,20 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
             # Random sample load profiles
             plot_specs = {}
             for ii in range(n_samp):
-                plot_specs[ii] = ['plot','Household: {}'.format(samp[ii])]
+                plot_specs[ii] = {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'Household: {}'.format(samp[ii]),}
 
             fig_specs = {
                 'suptitle': '\n'.join(('\nRandom sample load profiles during one day', \
                             'for {} households with {} energetic class in the {} of Italy'\
                             .format(n_hh, en_class, location.capitalize()))),
+                'xaxis_label': 'Time (h)',
+                'yaxis_left_label': 'Power (kW)',
+                'title': season,
             }
 
             powers = lp_samp_stor[:, ss, :, :]
 
-            fig = plot.seasonal_load_profiles(time_sim, powers, season, plot_specs, fig_specs, appliances_data, **params)
+            fig = plot.daily_profiles(time_sim/60, powers/1000, plot_specs, fig_specs, **params)
 
             filename = '{}_{}_{}_{}_sample_loadprof.png'.format(location, en_class, season, n_hh)
             fpath = basepath / dirname / subdirname / subsubdirname
@@ -674,3 +694,64 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
     return(lp_tot_stor)
 
 
+
+# ####################################################################################################################################
+
+# ## Uncomment the following lines to test the function
+
+# import parameters_input as inp
+
+
+# ## Parameters 
+
+# # Parameters are enter from keyboard by the user. This operation is performed using
+# # the method parameters_input from parameters_input.py (inp) that returns a dictionary.
+
+# params = inp.parameters_input()
+
+# # Flags to create and store files and figures or not
+
+# file_store_flag = 1
+# fig_store_flag = 1
+
+
+# ## Time discretization
+# # Time is discretized in steps of one hour (according to the definition of shared energy in the Decree Law 162/2019 - "Mille proroghe")
+
+# # Total time of simulation (h) - for each typical day
+# time = 24
+
+# # Timestep for the simulation (h)
+# dt = params['dt_aggr']/60
+
+# # Vector of time, from 00:00 to 23:59, i.e. 24 h
+# time_sim = np.arange(0, time, dt)
+
+# ## Building seasons and week dictionaries 
+# # This is done in order to explore all the seasons and, for each season two types of days (weekday and weekend)      
+# seasons = {'winter': (0, 'w'), 'spring': (1, 'ap'), 'summer': (2, 's'), 'autumn': (3, 'ap')}
+# days = {'week-day': (0, 'wd'), 'weekend-day': (1, 'we')}
+
+# #  A reference year is considered, in which the first day (01/01) is a monday. 
+# # Therefore, conventionally considering that winter lasts from 21/12 to 20/03, 
+# # spring from 21/03 to 20/06, summer from 21/06 to 20/09 and winter from 21/09
+# # to 20/12, each seasons has got the following number of weekdays and weekend days.
+# days_distr = {'winter': {'week-day': 64, 'weekend-day': 26},
+#             'spring': {'week-day': 66, 'weekend-day': 26},
+#             'summer': {'week-day': 66, 'weekend-day': 26},
+#             'autumn': {'week-day': 65, 'weekend-day': 26}
+#             }
+
+# consumption_seasons = aggregate_load_profiler(params, file_store_flag, fig_store_flag)/1000
+
+# # yearly_consumption = 0
+# # for season in seasons:
+# #     ss = seasons[season][0]
+# #     for day in days:
+# #         dd = days[day][0]
+# #         n_days_day_type = days_distr[season][day]
+# #         yearly_consumption += np.sum(consumption_seasons[ss, :, dd])*dt*n_days_day_type
+
+# # print('Energy consumption before interpolation: {} kWh/year'.format(yearly_consumption))
+
+# ####################################################################################################################################

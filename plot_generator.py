@@ -84,7 +84,7 @@ for color in colors:
 ## Seasonal load profiles
 # A method for plotting the load profiles for both day-types, for each season is created.
 
-def seasonal_load_profiles(time, powers, season, plot_specs, fig_specs, appliances_data, **params):
+def seasonal_load_profiles(time, powers, season, plot_specs, fig_specs, **params):
 
     ''' The method returns a figure-handle where seasonal load profiles are plotted, for 
         both day types.
@@ -674,3 +674,389 @@ def seasonal_energy_pie(labels_dict, energies, fig_specs, appliances_data, **par
 
     ##
     return(fig)
+
+
+## Parametric analysis
+# A method for plotting the results of a parametric analysis for different sizes of PV/battery
+
+def parametric_analysis(main_size_range, lead_size_range, data, plot_specs, fig_specs, **params):
+
+    ''' The method returns a figure-handle where the percentage over the total energy consumption 
+    for appliances or class of appliances is plotted, divided by season.
+    
+    Input:
+        main_size_range - list, containing the different sizes along which to plot on the x-axis
+        lead_size_range - list, containing the different sizes; for each of them a different subplot will be created
+        data - 3d-array, containing the different data (axis = 2) to be plotted along the y-axes for the different main sizes on 
+                the x-axis (axis = 0), for the different subplots (axis = 1)
+        plot_specs - dict, containing for each type of data some plotting information
+        fig_specs -dict, containing plot information for the figure
+        **params(if not specified, default values are used)
+            - 'time_scale': str, 's', 'h'
+            - 'power_scale': str,'W', 'kW'
+            - 'energy_scale': str, 'Wh', 'kWh', MWh'
+            - 'figsize': tup, height and width of the figure
+            - 'orientation': str, 'horizontal', 'vertical'
+            - 'font_small': float, size of the small fonts (ticks, ...)
+            - 'font_medium': float, size of the medium fonts (legend, labels, ...)
+            - 'font_large': float, size of the large fonts (titles, ...)
+    
+    Output:
+        fig - figure handle
+
+    '''
+    
+
+    ## Parameters
+
+    # Default parameters
+    def_params = {
+    'figsize': (297/25.4 , 420/25.4),
+    'orientation': 'horizontal',
+    'font_small': 14,
+    'font_medium': 16,
+    'font_large': 18,
+    }
+    
+    ##
+    # Setting the parameters that are not specified when the function is called to the default value
+    for param in def_params: 
+        if param not in params: params[param] = def_params[param]
+
+    # Figure setup: figure size and orientatio, font-sizes 
+    figsize = params['figsize']
+    orientation = params['orientation']
+
+    if orientation == 'horizontal': figsize = figsize[::-1]
+
+    fontsize_title = params['font_medium']
+    fontsize_legend = params['font_small']
+    fontsize_labels = params['font_small']
+    # fontsize_text = params['font_medium']
+    fontsize_ticks = params['font_small']
+    # fontsize_pielabels = params['font_small']
+
+    ## 
+
+    # For each size in the lead_size_range list, a subplot will be created. The data will be plotted
+    # on the y-axis, while on x-axis there will be the main_size_range
+    n_sizes_main = len(main_size_range)
+    n_sizes_lead = len(lead_size_range)
+
+    n_subplots = n_sizes_lead
+    n_cols = 2
+    n_rows = int((n_subplots + 1)/n_cols)
+    n_plots = np.size(data, axis = 2)
+
+    # Creating a figure with multiple subplots, with two rows (one for each type of day)
+    fig, ax = plt.subplots(n_rows, n_cols, sharex = False, sharey = False, figsize = figsize)
+    ax = ax.reshape((n_rows, n_cols))
+
+    suptitle = fig_specs['suptitle']
+    fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
+    fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.9, wspace = 0, hspace = 0.2)
+
+    # Needed to set the bars width in bar plots
+    d_main_size = (main_size_range[-1]-main_size_range[0])/n_sizes_main
+    
+    # Running through the various subplots
+    for lead_size in lead_size_range:
+
+        lead_index = lead_size_range.index(lead_size)
+
+        i_row = int(lead_index/n_cols)
+        i_col = lead_index%n_cols
+
+        yaxis_right_flag = 1
+
+        # In case of uneven number of plots, the last subplot is expanded into two slots
+        if lead_index == n_sizes_lead - 1 and n_subplots%2 != 0:
+            ax[i_row, i_col] = plt.subplot(n_rows, 1, n_rows)
+
+        # Running throught he varous data to be plotted
+        for i_plot in range(n_plots):
+
+            plot_data = data[:, lead_index, i_plot]
+            plot_yaxis = plot_specs[i_plot]['yaxis']
+            plot_type = plot_specs[i_plot]['type']
+            plot_label = plot_specs[i_plot]['label']
+        
+            # ax[i_row, i_col].plot(main_size_range, plot_data, 's-')
+
+            if plot_yaxis == 'left':
+
+                if plot_type == 'plot':
+                    ax[i_row, i_col].plot(main_size_range, plot_data, color = colors_rgb[i_plot], linestyle = '--', marker = 's', label = plot_label)
+    
+                elif plot_type == 'bar':
+                    ax[i_row, i_col].bar(main_size_range, plot_data, width = d_main_size, color = colors_rgb[i_plot], label = plot_label, alpha = 0.5)
+
+            elif plot_yaxis == 'right':
+
+                if yaxis_right_flag == 1:
+                    axtw = ax[i_row, i_col].twinx()
+                    yaxis_right_flag = 0
+
+                if plot_type == 'plot':
+                    axtw.plot(main_size_range, plot_data, color = colors_rgb[i_plot], linestyle = '--', marker = 's', label = plot_label)
+    
+                elif plot_type == 'bar':
+                    axtw.bar(main_size_range, plot_data, width = d_main_size, color = colors_rgb[i_plot], fill = False, label = plot_label, alpha = 0.5)
+        
+        # Making the subplot looking nice
+
+        ax[i_row, i_col].set_xlabel(fig_specs['xaxis_label'], fontsize = fontsize_labels)
+        # Set one tick each size
+        ax[i_row, i_col].set_xticks(main_size_range[: : 1])
+
+        if i_col == 0: 
+            ax[i_row, i_col].set_ylabel(fig_specs['yaxis_left_label'], fontsize = fontsize_labels)
+        else:
+            ax[i_row, i_col].tick_params(
+                axis = 'y',
+                which = 'both',
+                left = False,
+                labelleft = False,
+                )
+        
+        ax[i_row, i_col].set_ylim(fig_specs['yaxis_left_ylim'])
+        
+    
+        ax[i_row, i_col].tick_params(axis ='both', labelsize = fontsize_ticks)
+        # ax[i_row, i_col].grid(axis = 'y')
+
+        ax[i_row, i_col].legend(loc = 'upper left', fontsize = fontsize_legend)
+
+        title = '{} size: {} {}'.format(fig_specs['lead_size_name'], lead_size_range[lead_index], fig_specs['lead_size_uom'])
+        ax[i_row, i_col].set_title(title, fontsize = fontsize_title)
+
+        # If something has been plotted on the right y-axis:
+        if yaxis_right_flag == 0:
+            
+            if i_col%2 == 1 or (lead_index == n_sizes_lead - 1 and n_subplots%2 != 0): 
+                axtw.set_ylabel(fig_specs['yaxis_right_label'], fontsize = fontsize_labels)
+            else:
+                axtw.tick_params(
+                axis = 'y',
+                which = 'both',
+                right = False,
+                labelright = False,
+                )
+
+            axtw.grid(axis = 'y')
+            axtw.set_ylim(fig_specs['yaxis_right_ylim'])
+            axtw.legend(loc = 'upper right', fontsize = fontsize_legend)
+
+    return fig
+
+
+def daily_profiles(time, powers, plot_specs, fig_specs, **params):
+
+    ''' The method returns a figure-handle where seasonal load profiles are plotted, for 
+        both day types.
+    
+    Inputs:
+        time - 1d array, vector of time 
+        powers - 3d array, different types (axis = 0) of time-dependent profiles (axis = 1) to be plotted for each day-type (axis = 2)
+        plot_specs - dict, for each type of profile, the type of plot (str, bar plot or plot), the legend (str), yaxis (str, eft or right), etc.
+        fig_specs - dict, containing specific indications such suptitle, etc.
+        **params(if not specified, default values are used)
+            - 'time_scale': str, 's', 'h'
+            - 'power_scale': str,'W', 'kW'
+            - 'energy_scale': str, 'Wh', 'kWh', MWh'
+            - 'figsize': tup, height and width of the figure
+            - 'orientation': str, 'horizontal', 'vertical'
+            - 'font_small': float, size of the small fonts (ticks, ...)
+            - 'font_medium': float, size of the medium fonts (legend, labels, ...)
+            - 'font_large': float, size of the large fonts (titles, ...)
+            - all the simulation parameters (n_hh, en_class, etc.)
+    
+    Outputs:
+        fig - figure handle
+    '''
+       
+
+    ## Parameters
+    
+    # Default parameters
+    def_params = {
+
+    'figsize': (297/25.4 , 420/25.4),
+    'orientation': 'horizontal',
+    'font_small': 12,
+    'font_medium': 14,
+    'font_large': 16,
+    }
+    
+    # The parameters that are not specified when the function is called are set to the default value
+    for param in def_params: 
+        if param not in params: params[param] = def_params[param]
+
+    ## Updating parameters
+
+    # Figure setup: figure size and orientation, font-sizes 
+    figsize = params['figsize']
+    orientation = params['orientation']
+
+    if orientation == 'horizontal': figsize = figsize[::-1]
+
+    fontsize_title = params['font_large']
+    fontsize_legend = params['font_medium']
+    fontsize_labels = params['font_medium']
+    # fontsize_text = params['font_medium']
+    fontsize_ticks = params['font_small']
+    # fontsize_pielabels = params['font_small']
+
+    ##
+    # Creating a figure with multiple subplots, with two rows (one for each type of day)
+    fig, ax = plt.subplots(2, 1, sharex = False, sharey = False, figsize = figsize)
+    
+    suptitle = fig_specs['suptitle']
+    fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
+    fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.85, wspace = None, hspace = 0.3)
+   
+    ##
+    # Evaluating the time-step of the time-vector in order to set the bars' width
+    dt = float((time[-1] - time[0])/(np.size(time) - 1))
+
+    # Evaluating the number of profiles passed to the function for each day-type 
+    # It is given for ganted that only two day-types are considered
+    n_profiles = np.size(powers, axis = 0)
+
+    # Initializing minimum and maximum value for the two yaxis
+    ymin_left, ymax_left = 0, 0
+    ymin_right, ymax_right = 0, 0
+
+
+    ##
+    #Running through the day-types (week-day and weekend-day)
+    for day in days:
+
+        # Number corresponding to the type of day (0: week-day, 1: week-end -day)
+        dd = days[day][0] 
+
+        # Number of plots along left and right yaxis
+        n_plot_left = 0
+        n_plot_right = 0
+
+        # Running through the types of load profiles to be plotted for each day-type
+        for i_profile in range(n_profiles):
+
+            # Selecting the correct power-data to plot and the plot specifications
+            plot_data = powers[i_profile, :, dd]
+
+            try: plot_type = plot_specs[i_profile]['plot_type']
+            except: plot_type = 'plot'
+            
+            try: plot_yaxis = plot_specs[i_profile]['plot_yaxis']
+            except: plot_yaxis = 'left'
+
+            try: plot_label = plot_specs[i_profile]['plot_label']
+            except: plot_label = ''
+            
+            try: plot_linestyle = plot_specs[i_profile]['plot_linestyle']
+            except: plot_linestyle = '-'
+
+            try: plot_marker = plot_specs[i_profile]['plot_marker']
+            except: plot_marker = ''
+
+            try: plot_alpha = plot_specs[i_profile]['plot_alpha']
+            except: plot_alpha = 0.5
+
+            try: plot_color = plot_specs[i_profile]['plot_color']
+            except: plot_color = colors_rgb[i_profile]
+
+            if plot_yaxis == 'right':
+
+                axtw = ax[dd].twinx()
+                n_plot_right += 1
+                
+                if plot_type == 'bar':
+                    axtw.bar(time, plot_data, width = dt, color = plot_color, align = 'edge', fill = False, label = plot_label, alpha = plot_alpha)
+ 
+                else:
+                    axtw.plot(time, plot_data, color = plot_color, linestyle = plot_linestyle, marker = plot_marker, label = plot_label)
+
+                if np.max(plot_data) > ymax_right: ymax_right = np.max(plot_data)
+                if np.min(plot_data) < ymin_right: ymin_right = np.min(plot_data)
+
+            else:
+
+                n_plot_left += 1
+
+                if plot_type == 'bar':
+                    ax[dd].bar(time, plot_data, width = dt, color = plot_color, align = 'edge', label = plot_label, alpha = plot_alpha)
+ 
+                else:
+                    ax[dd].plot(time, plot_data, color = plot_color, linestyle = plot_linestyle, marker = plot_marker, label = plot_label)
+
+                if np.max(plot_data) > ymax_left: ymax_left = np.max(plot_data)
+                if np.min(plot_data) < ymin_left: ymin_left = np.min(plot_data)
+
+ 
+        # Making the subplot looking nice
+
+        # x-axis
+        ax[dd].set_xlabel(fig_specs['xaxis_label'], fontsize = fontsize_labels)
+        ax[dd].set_xlim([time[0], time[-1]])
+        # Set one tick each hour on the x-axis
+        ax[dd].xaxis.set_major_locator(plt.MaxNLocator(24))
+        # ax[dd].set_xticks(list(time[: : int(60*ts/dt)]))
+        ax[dd].tick_params(axis ='both', labelsize = fontsize_ticks)
+
+        # y-axis left
+        ax[dd].set_ylabel(fig_specs['yaxis_left_label'], fontsize = fontsize_labels)
+        ax[dd].set_ylim([0.9*ymin_left, 1.1*ymax_left])
+        ax[dd].grid(axis = 'y')
+
+        max_col = 2
+        if n_plot_left > max_col: n_plot_left = max_col
+        ax[dd].legend(loc = 'upper left', ncol = n_plot_left, fontsize = fontsize_legend)
+
+        title = '{}, {}'.format(fig_specs['title'].capitalize(), day)
+        ax[dd].set_title(title, fontsize = fontsize_title)
+
+        # If something has been plotted on the right y-axis:
+        if n_plot_right > 0:
+
+            axtw.set_ylabel(fig_specs['yaxis_right_label'], fontsize = fontsize_labels)
+            axtw.tick_params(axis ='y', labelsize = fontsize_ticks)
+            axtw.set_ylim([0.9*ymin_right, 1.1*ymax_right])
+
+            if n_plot_right > max_col: n_plot_right = max_col
+            axtw.legend(loc = 'upper right', ncol = n_plot_right, fontsize = fontsize_legend)
+    
+    ##
+    return(fig)
+
+
+
+
+# time_sim = np.arange(0, 1440, 60)
+# powers = np.random.randint(100, size = (4, 24, 2))
+
+# plot_specs = {
+#     0: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'Tutù', 'plot_color': 'b', 'plot_linestyle': '--', 'plot_marker': 's'},
+#     1: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'Tettarella', 'plot_color': 'r', 'plot_linestyle': '-', 'plot_marker': 'o'},
+#     2: {'plot_type': 'bar', 'plot_yaxis': 'left', 'plot_label': 'Gigi', 'plot_color': 'y', 'plot_linestyle': '--', 'plot_marker': 's'},
+#     3: {'plot_type': 'bar', 'plot_yaxis': 'right', 'plot_label': 'Bernie', 'plot_color': 'k', 'plot_linestyle': '--', 'plot_marker': 's'},
+#     }
+
+# fig_specs = {
+#     'suptitle': 'annarella',
+#     'title': 'maccox',
+#     'xaxis_label': 'ciccilli (m)',
+#     'yaxis_left_label': 'Pastrelli (kWs)',
+#     'yaxis_right_label': 'Kiwii',
+#     }
+
+# fig = daily_profiles(time_sim, powers, plot_specs, fig_specs)
+# plt.show()
+
+
+
+
+
+
+    
+

@@ -88,7 +88,7 @@ def parameters_input():
         # 'q_min': {'type': int, 'default_val': 15, 'min_val': 1, 'max_val': 100, 'uom': '(%)'},
         # 'n_people_avg': {'type': float, 'default_val': 2.7, 'min_val': 1., 'max_val': 10., 'uom': '(people/household)'},
         'location': {'type': str, 'default_val': 'north', 'possible_values': ['north', 'south', 'centre'], 'uom': '(/)'},
-        'power_max': {'type': float, 'default_val': 3000., 'min_val': 1000., 'max_val': 10000., 'uom': '(W)'},
+        'power_max': {'type': float, 'default_val': 3., 'min_val': 1., 'max_val': 10., 'uom': '(kW)'},
         'en_class': {'type': str, 'default_val': 'A+', 'possible_values': ['A+++', 'A++', 'A+', 'A', 'B', 'C', 'D'], 'uom': '(/)'},
         'ftg_avg': {'type': float, 'default_val': 100., 'min_val': 10., 'max_val': 1000., 'uom': '(m2)'},
         'dt_aggr':{'type': int, 'default_val': 60, 'possible_values': [5, 10, 15, 20, 30, 45, 60], 'uom': '(min)'},
@@ -292,6 +292,11 @@ def simulation_setup(tech):
         'size_min': {'type': float, 'default_val': 0.5, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
         'size_max': {'type': float, 'default_val': 1., 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
         }
+
+    if tech.strip("',.=\"_ ").lower().replace(' ', '_').replace('-', '_') == 'battery':
+        param_dict['size']['uom'] = 'kWh'
+        param_dict['size_min']['uom'] = 'kWh'
+        param_dict['size_max']['uom'] = 'kWh'
 
     # Adding a description to each parameter
     param_dict['sim_type']['description'] = 'Type of simulation for {}: \'fixed\' size or \'parametric\''.format(tech)
@@ -584,4 +589,4 @@ def simulation_setup(tech):
     size_range = np.arange(size_min, size_max + d_size, d_size)
     if size_range[-1] != size_max: size_range[-1] = size_max
 
-    return(save_params, size_range)
+    return(save_params, list(size_range))

@@ -2,6 +2,6 @@
 'n_hh';10;'(units)'
 'dt_aggr';60;'(min)'
 'ftg_avg';100.0;'(m2)'
-'power_max';3000.0;'(W)'
+'power_max';3.0;'(kW)'
 'location';'north';'(/)'
-'en_class';'A';'(/)'
+'en_class';'A++';'(/)'

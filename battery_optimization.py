@@ -64,7 +64,7 @@ def battery_optimization(power_available, net_load, time_dict, technologies_dict
     # # PV size (kW)
     # pv_size = technologies_dict['pv_size']
 
-    # Battery size (kW)
+    # Battery size/capacity (kWh)
     battery_size = technologies_dict['battery_size']
     battery_capacity = battery_size
 

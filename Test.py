@@ -3,8 +3,9 @@ import numpy as np
 import math
 import random
 from scipy.interpolate import interp1d
+from scipy.integrate import cumtrapz
 import matplotlib.pyplot as plt
-from aggregate_load_profiler import aggregate_load_profiler as agr
+# from aggregate_load_profiler import aggregate_load_profiler as agr
 
 # # Specifying which quantities (load profiles) are going to be stored and plotted
 # load_profiles_types = {
@@ -366,10 +367,127 @@ from aggregate_load_profiler import aggregate_load_profiler as agr
 
 # print(shasha)
 
-mylist = []
-mylist.append('sasha')
-mylist += 'bernie'
+# mylist = []
+# mylist.append('sasha')
+# mylist += 'bernie'
 
-print(mylist)
+# print(mylist)
 
+# aaa = np.array([[1,2,3,4],[1,4,5,6]])
+# print(aaa)
+
+# print(aaa[:, 0,np.newaxis])
+# aaa = np.concatenate((aaa, aaa[:, 0,np.newaxis]), axis = 1)
+# print(aaa)
+
+# dt = 1 #original timestep (min)
+# time = 12 #total simulation time (min)
+# time_sim = np.arange(0, time, dt)
+# time_sim = np.append(time_sim, time)
+
+# load_profile = np.arange(0, time, dt)
+# load_profile = np.append(load_profile, load_profile[0])
+
+# new_dt = 2
+# new_time = np.arange(0, time, new_dt)
+
+# new_load_profile = np.trapz(load_profile[::2], time_sim[::2])/(new_dt/dt)
+# print(new_load_profile)
+
+# plt.plot(time_sim, load_profile)
+# plt.bar(new_time, new_load_profile, width = new_dt, fill = False, edgecolor = 'k')
+# plt.show()
+
+# print(time_sim)
+
+
+
+# ncols = 3
+# for i in range(15):
+#     print('{}: ({},{})'.format(i, int(i/ncols), i%ncols))
+    
+# print(int(0.9))
+# print(int(0.9999999))
+
+# n_sizes_main = 4
+# n_sizes_lead = 3
+
+
+# data1 = np.random.randint(60, size = (n_sizes_main, n_sizes_lead))
+# data2 = np.random.randint(100, size = (n_sizes_main, n_sizes_lead))
+# # data1 = np.random.randint(100, size = (n_sizes_main, n_sizes_lead))
+
+# data = np.stack((data1, data2), axis = 2)
+# print(np.shape(data))
+
+# fig, ax = plt.subplots(2,2)
+
+# ax[0,0].plot([0,1],[1,1])
+# ax[0,1].plot([0,1],[10,12])
+# plt.subplot(2,1,2)
+# plt.plot([0,2],[12,25])
+
+# plt.show()
+
+# # aaa = np.random.randint(100, size = (2,3,4))
+# aaa = np.array([[[1,2,3,4], [4,5,6,7], [7,8,9,0]],
+#                 [[4,5,30,43], [344,5,6,7], [6787,8,9,0]],
+#                  ])
+
+# print(aaa[:,:,0])
+
+# bbb = np.transpose(aaa, axes = (1, 0, 2))
+
+# # print(np.shape(aaa))
+# # print(np.shape(bbb))
+
+# print(bbb[:,:,0])
+
+# plt.plot([0, 0], [1, 5], color = 'b', marker = '', linestyle = '-')
+# plt.show()
+
+
+# ymin_left, ymax_left = 0, 0
+# ymin_right, ymax_right = 0, 0
+
+
+colors = [(230, 25, 75),
+        (60, 180, 75),
+        (255, 225, 25),
+        (0, 130, 200),
+        (245, 130, 48),
+        (145, 30, 180),
+        (70, 240, 240),
+        (240, 50, 230),
+        (210, 245, 60),
+        (250, 190, 212),
+        (0, 128, 128),
+        (220, 190, 255),
+        (170, 110, 40),
+        (255, 250, 200),
+        (128, 0, 0),
+        (170, 255, 195),
+        (128, 128, 0),
+        (255, 215, 180),
+        (0, 0, 128),
+        (128, 128, 128)]
+
+# Transforming into rgb triplets
+colors_rgb = []
+for color in colors:
+    color_rgb = []
+    for value in color:
+        color_rgb.append(float(value)/255) 
+    colors_rgb.append(tuple(color_rgb))
+
+
+for i_color in range(len(colors_rgb)):
+    color = colors_rgb[i_color]
+    # plt.plot([0, 1], [i_color + 1, i_color + 2], label = '{}'.format(i_color))
+    plt.bar(i_color, 10, align = 'edge', label = '{}'.format(i_color))
+    plt.xlim([0, len(colors_rgb) + 1])
+
+plt.legend(loc = 'right')
+
+plt.show()
 

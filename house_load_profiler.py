@@ -25,7 +25,7 @@ from load_profiler import load_profiler as lp
 
 ########## Routine
 
-def house_load_profiler(apps_availability, day, season, appliances_data, **params):
+def house_load_profiler(time_dict, apps_availability, day, season, appliances_data, **params):
     
     ''' The method returns a load profile for a given household in a total simulation time of 1440 min, with a timestep of 1 min.
     
@@ -45,17 +45,21 @@ def house_load_profiler(apps_availability, day, season, appliances_data, **param
     ## Time 
     # Time discretization for the simulation    
 
-    # Time-step, total time and vector of time from 00:00 to 23:59 (one day) (min)
-    dt = 1 
-    time = 1440 
-    time_sim = np.arange(0,time,dt) 
+    # Time-step (min) 
+    dt = time_dict['dt']
+
+    # Total time of simulation (min) 
+    time = time_dict['time']
+
+    # Vector of time from 00:00 to 23:59 (one day) (min)
+    time_sim = time_dict['time_sim'] 
 
     
     ## Parameters
     # Simulation parameters that can be changed from the user
 
     # Contractual power for each household (W)
-    power_max = params['power_max']
+    power_max = params['power_max']*1000
 
    
     ## Input data for the appliances
@@ -87,7 +91,7 @@ def house_load_profiler(apps_availability, day, season, appliances_data, **param
         if apps_availability[app_ID] == 0:
             continue
         
-        load_profile = lp(app, day, season, appliances_data, **params) #load_profile has to outputs (time and power)
+        load_profile = lp(time_dict, app, day, season, appliances_data, **params) #load_profile has to outputs (time and power)
         
         # In case the instantaneous power exceedes the maximum power, some tries
         # are made in order to change the moment in which the next appliance is
@@ -124,16 +128,24 @@ def house_load_profiler(apps_availability, day, season, appliances_data, **param
     return(house_load_profile,energy)
 
 
-# # Uncomment the following lines to test the function
+#####################################################################################################################
+
+# ## Uncomment the following lines to test the function
+
 # import matplotlib.pyplot as plt
 # from tictoc import tic, toc
 
-# apps_availability = np.ones(17)
-# day = 'wd'
-# season = 's'
-# dt = 1
-# time = 1440
-# time_sim = np.arange(0,time,dt)
+# # Time-step, total time and vector of time from 00:00 to 23:59 (one day) (min)
+# dt = 1 
+# time = 1440 
+# time_sim = np.arange(0,time,dt) 
+
+# # Creating a dictionary to be passed to the various methods, containing the time discretization
+# time_dict = {
+#     'time': time,
+#     'dt': dt,
+#     'time_sim': time_sim,
+#     }
 
 
 # apps, apps_ID, apps_attr = datareader.read_appliances('eltdome_report.csv',';','Input')
@@ -188,27 +200,27 @@ def house_load_profiler(apps_availability, day, season, appliances_data, **param
 #             apps_avg_lps[app][(season, day)] = load_profile
 
         
-    # if app_type == 'duty_cycle':
-    #     fname_type = 'dutycycle'
-    #     filename = '{}_{}.csv'.format(fname_type, fname_nickname)
+#     if app_type == 'duty_cycle':
+#         fname_type = 'dutycycle'
+#         filename = '{}_{}.csv'.format(fname_type, fname_nickname)
         
-    #     # Reading the time and power vectors for the duty cycle 
-    #     data_dc = datareader.read_general(filename, ';', 'Input')
+#         # Reading the time and power vectors for the duty cycle 
+#         data_dc = datareader.read_general(filename, ';', 'Input')
 
-    #     # Time is already stored in  minutes
-    #     time_dc = data_dc[:, 0] 
+#         # Time is already stored in  minutes
+#         time_dc = data_dc[:, 0] 
 
-    #     # Power is already stored in Watts, it corresponds to the duty cycle
-    #     power_dc = data_dc[:, 1] 
-    #     duty_cycle = power_dc
+#         # Power is already stored in Watts, it corresponds to the duty cycle
+#         power_dc = data_dc[:, 1] 
+#         duty_cycle = power_dc
         
-    #     # Interpolating the duty-cycle, if it has a different time resolution
-    #     if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
-    #             time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
-    #             duty_cycle = np.interp(time_dc, power_dc)
+#         # Interpolating the duty-cycle, if it has a different time resolution
+#         if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
+#                 time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+#                 duty_cycle = np.interp(time_dc, power_dc)
 
-    #     apps_dcs[app] = {'time_dc': time_dc,
-    #                     'duty_cycle': duty_cycle}
+#         apps_dcs[app] = {'time_dc': time_dc,
+#                         'duty_cycle': duty_cycle}
 
 
 # appliances_data = {
@@ -224,14 +236,20 @@ def house_load_profiler(apps_availability, day, season, appliances_data, **param
 #     }
 
 # params = {
-#     'power_max': 3000,
+#     'power_max': 3,
 #     'en_class': 'D',
 #     'toll': 15,
 #     'devsta': 2,
 #     'ftg_avg': 100
 #     }
+
+# apps_availability = np.ones(17)
+# day = 'wd'
+# season = 's'
  
-# house_load_profile, energy = house_load_profiler(apps_availability, day, season, appliances_data, **params)
+# house_load_profile, energy = house_load_profiler(time_dict, apps_availability, day, season, appliances_data, **params)
 # plt.bar(time_sim,house_load_profile,width=dt,align='edge')
 
 # plt.show()
+
+######################################################################################################################################

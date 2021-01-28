@@ -13,7 +13,7 @@ from tabulate import tabulate
 from battery_optimization import battery_optimization
 import matplotlib.pyplot as plt
 
-def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, auxiliary_dict):
+def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, auxiliary_dict, fixed_analysis_flag):
 
 
 
@@ -27,8 +27,8 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
     # Timestep for the simulation (h)
     dt = time_dict['dt']
 
-    # Vector of time, from 00:00 to 23:59, i.e. 24 h
-    time_sim = time_dict['time_sim']
+    # # Vector of time, from 00:00 to 23:59, i.e. 24 h
+    # time_sim = time_dict['time_sim']
 
     # Number of elements of the vector of time
     time_length = time_dict['time_length']
@@ -42,8 +42,8 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
     # PV size (kW)
     pv_size = technologies_dict['pv_size']
 
-    # Battery size (kW)
-    battery_size = technologies_dict['battery_size']
+    # # Battery size (kWh)
+    # battery_size = technologies_dict['battery_size']
 
     # # Battery specifications 
     # battery_specs = technologies_dict['battery_specs']
@@ -73,7 +73,7 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
 
     # Days dict (how many day-types: weekday and weekend day)
     days = auxiliary_dict['days']
-    # n_days = auxiliary_dict['n_days']
+    n_days = auxiliary_dict['n_days']
 
     # Days distribution (how many days for each day-type during each month)
     # days_distr = auxiliary_dict['days_distr']
@@ -116,6 +116,19 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
     # Shared energy (according to the definition provided by the Decree Law 162/2019 - Milleproroghe) (kWh/month)
     shared_energy = np.zeros((n_months))
 
+    # In case of a fixed analysis, powers are stored for each typical day, in order to be plotted
+    # This is done only if the fixed_analysis_flag is active in order to not slow down the procedure
+    # storing such files if they are not needed
+    if fixed_analysis_flag == 1:
+
+        pv_production_month_day = np.zeros((time_length, n_months, n_days))
+        grid_feed_month_day = np.zeros((time_length, n_months, n_days))
+        grid_purchase_month_day = np.zeros((time_length, n_months, n_days))
+        battery_charge_month_day = np.zeros((time_length, n_months, n_days))
+        battery_discharge_month_day = np.zeros((time_length, n_months, n_days))
+        battery_energy_month_day = np.zeros((time_length, n_months, n_days))
+        shared_power_month_day = np.zeros((time_length, n_months, n_days))
+
 
     ## Performing the calculation for each month, for each day-type (i.e. for n_months*n_days = 24 typical days)
 
@@ -126,38 +139,6 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
 
         # Unique number used to identify the month in the arrays elements
         mm = months[month]['id'][0]
-
-        # # Uncomment to plot the power values for this typical day
-        # plot_params = {
-        # 'time_scale': 'h',
-        # 'power_scale': 'kW',
-        # 'energy_scale': 'MWh',
-        # 'figsize': (297/25.4 , 420/25.4),
-        # 'orientation': 'horizontal',
-        # 'font_small': 14,
-        # 'font_medium': 16,
-        # 'font_large': 18,
-        # }
-
-        # # Figure setup: figure size and orientation, font-sizes 
-        # figsize = plot_params['figsize']
-        # orientation = plot_params['orientation']
-
-        # if orientation == 'horizontal': figsize = figsize[::-1]
-
-        # fontsize_title = plot_params['font_large']
-        # fontsize_legend = plot_params['font_medium']
-        # fontsize_labels = plot_params['font_medium']
-        # fontsize_text = plot_params['font_medium']
-        # fontsize_ticks = plot_params['font_small']
-        # fontsize_pielabels = plot_params['font_small']
-
-        # # Creating a figure with multiple subplots, with two rows (one for each type of day)
-        # fig, ax = plt.subplots(2, 1, sharex = False, sharey = False, figsize = figsize)
-        
-        # # suptitle = 'Results in {}'.format(month)
-        # # fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
-        # fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.85, wspace = None, hspace = 0.3)
 
         # Running through the day-types (weekday or weekend day)
         for day in days:
@@ -197,14 +178,13 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
             # Energy that is stored in the energy at each time-step (kWh)
             battery_energy = np.zeros((time_length)) 
  
-
             # Evaluating production, consumption and net production/load in the current typical day
             pv_production = pv_production_month[:, mm]  
             consumption = consumption_month_day[:, mm, dd]
 
             pv_available = pv_production - consumption
-            # net_load[pv_available < 0] = -pv_available[pv_available < 0]
             pv_available[pv_available < 0]= 0
+
             net_load = consumption - pv_production
             
             # Using the method battery_optimization from the module battery_optimization.py to run the MILP
@@ -245,53 +225,19 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
             battery_discharge_energy[mm] += np.nansum(battery_discharge)*dt*number_of_days
             shared_energy[mm] += np.nansum(shared_power)*dt*number_of_days
 
-            # # Uncomment to plot the power values for this typical day
 
-            # # Plotting the value for the typical day
-            # ax[dd].plot(time_sim + dt/2, pv_production, label = 'pv_production')
-            # ax[dd].plot(time_sim + dt/2, consumption, label = 'consumption')
-            # ax[dd].plot(time_sim + dt/2, grid_feed, label = 'grid_feed')
-            # ax[dd].plot(time_sim + dt/2, grid_purchase, label = 'grid_purchase')
-            # ax[dd].plot(time_sim + dt/2, battery_charge, label = 'battery_charge')
-            # ax[dd].plot(time_sim + dt/2, battery_discharge, label = 'battery_discharge')
+            # In case of a fixed analysis, powers are stored for each typical day, in order to be plotted
+            # This is done only if the fixed_analysis_flag is active in order to not slow down the procedure
+            # storing such files if they are not needed
+            if fixed_analysis_flag == 1:
 
-            # ax[dd].bar(time_sim, shared_power, color = 'k', width = dt, align = 'edge', label = 'shared power', alpha = 0.3)
-            
-            # title = '{}, {}'.format(month.capitalize(), day)
-            # ax[dd].set_title(title, fontsize = fontsize_title)
-
-            # axtw = ax[dd].twinx()
-            # axtw.plot(time_sim + dt/2, battery_energy/battery_size*100, 'r--', label = 'energy battery')
-            
-            # # Making the figure look properly
-       
-            # ax[dd].set_xlabel('Time ({})'.format('h'), fontsize = fontsize_labels)
-            # ax[dd].set_ylabel('Power ({})'.format('kW'), fontsize = fontsize_labels)
-            # ax[dd].set_xlim([time_sim[0], time_sim[-1]])
-            # # Set one tick each hour on the x-axis
-            # ax[dd].set_xticks(list(time_sim[: : int(dt)]))
-            # ax[dd].tick_params(axis ='both', labelsize = fontsize_ticks)
-            # ax[dd].tick_params(axis ='x', labelrotation = 0)
-            # ax[dd].grid()
-            # ax[dd].legend(loc = 'upper left', fontsize = fontsize_legend, ncol = 2)
-
-            # axtw.set_ylabel('SOC ({})'.format('%'), fontsize = fontsize_labels)
-            # axtw.legend(loc = 'upper right', fontsize = fontsize_legend, ncol = 2)
-            # axtw.set_ylim([0, 100])
-
-  
-
- 
-
-
-
-
-    # index_self_suff_month = shared_energy/(consumption_energy + battery_charge_energy)*100
-    # index_self_cons_month = shared_energy/(pv_production_energy + battery_discharge_energy)*100
-
-    # index_self_suff_year =  np.sum(shared_energy)/np.sum(consumption_energy + battery_charge_energy)*100
-    # index_self_cons_year = np.sum(shared_energy)/np.sum(pv_production_energy + battery_discharge_energy)*100
-
+                pv_production_month_day[:, mm, dd] = pv_production
+                grid_feed_month_day[:, mm, dd] = grid_feed
+                grid_purchase_month_day[:, mm, dd] = grid_purchase
+                battery_charge_month_day[:, mm, dd] = battery_charge
+                battery_discharge_month_day[:, mm, dd] = battery_discharge
+                battery_energy_month_day[:, mm, dd] = battery_energy
+                shared_power_month_day[:, mm, dd] = shared_power
 
     results = {
         'optimization_status': optimization_status,
@@ -301,24 +247,25 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
         'grid_purchase_energy': grid_purchase_energy,
         'battery_charge_energy': battery_charge_energy,
         'battery_discharge_energy': battery_discharge_energy,
-        'shared_energy': shared_energy,
-        # 'index_self_suff_month': index_self_suff_month,
-        # 'index_self_cons_month': index_self_cons_month,
-        # 'index_self_suff_year': index_self_suff_year,
-        # 'index_self_cons_year': index_self_cons_year,        
+        'shared_energy': shared_energy,       
         }
+
+    # In case of a fixed analysis, powers are stored for each typical day, in order to be plotted
+    # This is done only if the fixed_analysis_flag is active in order to not slow down the procedure
+    # storing such files if they are not needed
+    if fixed_analysis_flag == 1:
+        results['pv_production_month_day'] = pv_production_month_day
+        results['consumption_month_day'] = consumption_month_day
+        results['grid_feed_month_day'] = grid_feed_month_day
+        results['grid_purchase_month_day'] = grid_purchase_month_day
+        results['battery_charge_month_day'] = battery_charge_month_day
+        results['battery_discharge_month_day'] = battery_discharge_month_day
+        results['battery_energy_month_day'] = battery_energy_month_day
+        results['shared_power_month_day'] = shared_power_month_day
 
     return results
 
 
-
-   
-
-
-
-    # [print('{0:s}: ISS: {1:.2f}%, ISC: {2:.2f}%'.format(month.capitalize(), index_self_suff_month[months[month]['id'][0]], index_self_cons_month[months[month]['id'][0]])) for month in months]
-
-    # print('\nYear: ISS: {0:.2f}%, ISC: {1:.2f}%'.format(index_self_suff_year, index_self_cons_year))
 
 
         

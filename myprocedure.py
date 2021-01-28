@@ -4,6 +4,7 @@ import csv
 # from pulp import *
 from scipy.interpolate import interp1d
 from tabulate import tabulate
+from pathlib import Path
 
 import parameters_input as inp
 import plot_generator as plot
@@ -53,8 +54,43 @@ fontsize_ticks = params['font_small']
 fontsize_pielabels = params['font_small']
 
 
+colors = [(230, 25, 75),
+        (60, 180, 75),
+        (255, 225, 25),
+        (0, 130, 200),
+        (245, 130, 48),
+        (145, 30, 180),
+        (70, 240, 240),
+        (240, 50, 230),
+        (210, 245, 60),
+        (250, 190, 212),
+        (0, 128, 128),
+        (220, 190, 255),
+        (170, 110, 40),
+        (255, 250, 200),
+        (128, 0, 0),
+        (170, 255, 195),
+        (128, 128, 0),
+        (255, 215, 180),
+        (0, 0, 128),
+        (128, 128, 128)]
+
+# Transforming into rgb triplets
+colors_rgb = []
+for color in colors:
+    color_rgb = []
+    for value in color:
+        color_rgb.append(float(value)/255) 
+    colors_rgb.append(tuple(color_rgb))
+
+
 
 ###########################################################################################################################################################################
+
+###############################################################################
+
+# The basepath of the file is stored in a variable 
+basepath = Path(__file__).parent
 
 ### Parameters and simulation setup
 
@@ -77,7 +113,7 @@ location = params['location']
 # Energetic class of the appiances: 'A+++' | 'A++' | 'A+' | 'A' | 'B' | 'C' | 'D'
 en_class = params['en_class']
 
-# Contractual power for each household (W)
+# Contractual power for each household (kW)
 power_max = params['power_max']
 
 # Time-step used to aggregated the results (min): 1 | 5 | 10 | 15 | 10 | 30 | 45 | 60
@@ -227,7 +263,7 @@ time_dict = {
 ### Input data
 
 # Maximum power from the grid (total for the aggregate of households) (kW)
-grid_power_max = power_max*n_hh/1000
+grid_power_max = power_max*n_hh
 
 
 ## Battery specification
@@ -267,7 +303,7 @@ if (time_pv[-1] - time_pv[0])/(np.size(time_pv) - 1) != dt:
 # ax.legend()
 
 
-## Consumption fro the aggregate of households 
+## Consumption from the aggregate of households 
 
 # Asking the user if detailed graphs and information about the load profile are needed to be stored as files and
 # graphs (it will take some seconds more)
@@ -330,17 +366,79 @@ for day in days:
 
 # plt.show()
 
+# # Uncomment to check on energy consumption before and after interpolation between seasons and months
+# yearly_consumption = 0
+# for season in seasons:
+#     ss = seasons[season][0]
+#     for day in days:
+#         dd = days[day][0]
+#         n_days_day_type = days_distr[season][day]
+#         yearly_consumption += np.sum(consumption_seasons[ss, :, dd])*dt*n_days_day_type
+
+# print('Energy consumption before interpolation: {} kWh/year'.format(yearly_consumption))
+
+# yearly_consumption = 0
+# for month in months:
+#     mm = months[month]['id'][0]
+#     for day in days:
+#         dd = days[day][0]
+#         n_days_day_type = months[month]['days_distr'][day]
+#         yearly_consumption += np.sum(consumption_month_day[:, mm, dd])*dt*n_days_day_type
+
+# print('Energy consumption after interpolation: {} kWh/year'.format(yearly_consumption))
+
+
+
+### Energy shared from the aggregate of household during one year, for all possible configurations
+
+# Total number of configurations to be analysed
+n_pv_sizes = len(pv_size_range)
+n_battery_sizes = len(battery_size_range)
+n_configurations = n_pv_sizes*n_battery_sizes
+
+fixed_analysis_flag = 0
+if n_configurations == 1: fixed_analysis_flag = 1
+
+# Initializing a list where to store some relevant results to be printed as a tabulate
+tab_results = []
+
+# Initializing arrays where to store some relevant results to be plotted
+if n_configurations  != 1:
+
+    # Index of self-sufficiency in one year for each configuration
+    iss_configurations = np.zeros((n_pv_sizes, n_battery_sizes))
+
+    # Index of self-consumption in one year for each configuration
+    isc_configurations = np.zeros((n_pv_sizes, n_battery_sizes))
+
+    # Shared energy in one year for each configuration
+    esh_configurations = np.zeros((n_pv_sizes, n_battery_sizes))
+
+
+
+# A message is printed to let the user know how the simulation is proceeding 8every 25% of progress)
+perc_configurations = 25
+count_configurations = 0
+
+# The user is informed that the evaluation of the shared energy is starting
+message = '\nEvaluation of the energy shared by the aggregate of households for {:d} configuration(s).'.format(n_configurations)
+print(message)
+
+# Creating the input power dictionary to be passed to the method  that evaluates the shared energy
+# for the configuration
+
 input_powers_dict = {
     'pv_production_unit': pv_production_unit,
     'consumption_month_day': consumption_month_day,
     }
 
-
-tab_sizes = []
-
-
 # Running through the different sizes for the PV
+
+tic()
 for pv_size in pv_size_range:
+
+    # Storing the index of the PV size in the pv_size_range list (needed for properly storing the results)
+    pv_index = pv_size_range.index(pv_size)
 
     # Storing the PV size in the technologies_dict that is passed to the methods
     technologies_dict['pv_size'] = pv_size
@@ -348,51 +446,79 @@ for pv_size in pv_size_range:
     # Running through the different sizes for the battery
     for battery_size in battery_size_range:
 
+        # Storing the index of the battery size in the battery_size_range list (needed for properly storing the results)
+        battery_index = battery_size_range.index(battery_size)
+
         # Storing the battery size in the technologies_dict that is passed to the methods
         technologies_dict['battery_size'] = battery_size
 
         
-        results = shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, auxiliary_dict)
+        ## Calling the method that computes the energy shared during one year
 
+        results = shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, auxiliary_dict, fixed_analysis_flag)
 
+        # Storing the results
+
+        # Status of the optimization during the current typical day
         optimization_status = results['optimization_status']
 
+        # Energy produced by the PV during each month (kWh/month)
         pv_production_energy = results['pv_production_energy']
+
+        # Energy consumed by the aggregate of households during each month (kWh/month)
         consumption_energy = results['consumption_energy']
+
+        # Excess energy fed into the grid during each month (kWh/month)
         grid_feed_energy = results['grid_feed_energy']
+
+        # Deficit of energy purchased from the grid during each month (kWh/month)
         grid_purchase_energy = results['grid_purchase_energy']
+
+        # Excess energy used to charge the battery during each month (kWh/month)
         battery_charge_energy = results['battery_charge_energy']
+
+        # Deficit of energy taken from the battery during each month (kWh/month)
         battery_discharge_energy = results['battery_discharge_energy']
+
+        # Energy shared by the aggregate of households, according to the definition provided by the Decree-Law 162/2019 (kWh/month)
         shared_energy = results['shared_energy']
 
+        # Processing the results
+
+        # Index of self-sufficiency in each month (%)
         index_self_suff_month = shared_energy/(consumption_energy + battery_charge_energy)*100
+
+        # Index of self-consumption in each month (%)
         index_self_cons_month = shared_energy/(pv_production_energy + battery_discharge_energy)*100
 
+        # Index of self-sufficiency in a year (%)
         index_self_suff_year =  np.sum(shared_energy)/np.sum(consumption_energy + battery_charge_energy)*100
+
+        # Index of self-consumption in a year (%)
         index_self_cons_year = np.sum(shared_energy)/np.sum(pv_production_energy + battery_discharge_energy)*100
 
-        # Post-processing of the results in case of fixed size simulation for both the PV and the battery 
-        # (detailed results are provided)
 
-        if len(pv_size_range) == 1 and len(battery_size_range) == 1:
-
-
+        ## Post-processing of the results 
         
-            # Optimization status
-            tab = []
-            headers = ['Month', 'Week-day', 'Weekend-day', 'ISS (%)', 'ISC (%)', \
-                'Shared energy (kWh)', 'PV production (kWh)', 'Consumption (kWh)', \
-                'Grid feed (kWh)', 'Grid purchase (kWh)', 'Battery charge (kWh)', 'Battery discharge (kWh)']
+        # In case of fixed size simulation for both the PV and the battery detailed results are provided
+        if n_configurations == 1:
+
+            # Storing the results in a tabular form 
+
+            headers = ['Month', 'Week-day', 'Weekend-day', 'ISS \n(%)', 'ISC \n(%)', \
+                'Shared energy \n(kWh)', 'PV production \n(kWh)', 'Consumption \n(kWh)', \
+                'Grid feed \n(kWh)', 'Grid purchase \n(kWh)', 'Battery charge \n(kWh)', 'Battery discharge \n(kWh)']
             
+            # Monthy results 
             for month in months:
-
                 mm = months[month]['id'][0]
-
                 row = [month.capitalize()]
 
+                # Optimization status
                 for day in days:
                     row = row + [optimization_status[month][day]]
 
+                # Energies
                 row = row + (['{0:.2f}'.format(index_self_suff_month[mm]), \
                             '{0:.2f}'.format(index_self_cons_month[mm]), \
                             '{0:.1f}'.format(shared_energy[mm]), \
@@ -404,38 +530,43 @@ for pv_size in pv_size_range:
                             '{0:.1f}'.format(battery_discharge_energy[mm]), \
                             ])
 
-                tab.append(row)
+                tab_results.append(row)
 
-
-            tab.append([]*len(headers))
-            tab.append(['Year', '/', '/', '{0:.2f}'.format(index_self_suff_year), \
+            # Yearly results
+            tab_results.append([]*len(headers))
+            tab_results.append(['Year', '/', '/', '{0:.2f}'.format(index_self_suff_year), \
                         '{0:.2f}'.format(index_self_cons_year), \
-                        '{0:.1f}'.format(np.sum(shared_energy)),
-                        '', \
-                        '', \
-                        '', \
-                        '', \
-                        '', \
-                        '', \
+                        '{0:.1f}'.format(np.sum(shared_energy)), \
+                        '{0:.1f}'.format(np.sum(pv_production_energy)), \
+                        '{0:.1f}'.format(np.sum(consumption_energy)), \
+                        '{0:.1f}'.format(np.sum(grid_feed_energy)), \
+                        '{0:.1f}'.format(np.sum(grid_purchase_energy)), \
+                        '{0:.1f}'.format(np.sum(battery_charge_energy)), \
+                        '{0:.1f}'.format(np.sum(battery_discharge_energy)), \
                         ])
 
-            message = '\nOptimization status and results (self-sufficiency and self-consumption indices, shared energy)'
-            print(message) 
-            print(tabulate(tab, headers = headers))
-
-
-        
+        # In case at least one technology is subject to a parametric analysis, only yearly quantities are shown
         else:
 
+            # Storing the yearly values of the self-sufficiency and self-consumption indices and of the shared energy 
+            # for the current configuration
+
+            iss_configurations[pv_index, battery_index] = index_self_suff_year
+            isc_configurations[pv_index, battery_index] = index_self_cons_year
+            esh_configurations[pv_index, battery_index] = np.sum(shared_energy)
+
+            # Stroing the results in a tabularr form
+
+            # List of days in which the optimization did not work or was infeasible
             opt_did_not_work_list = []
-            opt_unnecessary_list = []
+            # opt_unnecessary_list = []
             opt_infeasible_list = []
 
+            # Optimization status
             for month in months:
-
                 month_nickname = months[month]['id'][1]
-                for day in days:
 
+                for day in days:
                     day_nickname = days[day][1]
 
                     opt_status = optimization_status[month][day].lower().strip('\'",._- ').replace('.','').replace(' ','_')
@@ -443,20 +574,242 @@ for pv_size in pv_size_range:
                     # elif opt_status == 'opt_unnecessary': opt_unnecessary_list.append('{}, {}'.format(month_nickname.capitalize(), day_nickname))
                     elif opt_status == 'infeasible': opt_infeasible_list.append('{}, {}'.format(month_nickname.capitalize(), day_nickname))
 
+            # Energies
             row = [pv_size, battery_size, '\n'.join(opt_did_not_work_list), '\n'.join(opt_infeasible_list), \
-                '{0:.2f}'.format(index_self_suff_year), '{0:.2f}'.format(index_self_cons_year), '{0:.1f}'.format(np.sum(shared_energy)), \
+                '{0:.2f}'.format(index_self_suff_year), \
+                '{0:.2f}'.format(index_self_cons_year), \
+                '{0:.1f}'.format(np.sum(shared_energy)), \
+                '{0:.1f}'.format(np.sum(pv_production_energy)), \
+                '{0:.1f}'.format(np.sum(consumption_energy)), \
+                '{0:.1f}'.format(np.sum(grid_feed_energy)), \
+                '{0:.1f}'.format(np.sum(grid_purchase_energy)), \
+                '{0:.1f}'.format(np.sum(battery_charge_energy)), \
+                '{0:.1f}'.format(np.sum(battery_discharge_energy)), \
                 ]
 
-            
+            tab_results.append(row)
 
-            tab_sizes.append(row)
+        # The number of configurations evaluated is updated and, in case, the progress is printed
+        count_configurations += 1
+        if int(count_configurations/n_configurations*100) >= perc_configurations:
+            print('{:d} % completed'.format(int(count_configurations/n_configurations*100)))
+            perc_configurations += 25
 
+# Header to be used in the tabulate in case of parametric analysis at least for one of the two technologies
+if n_configurations != 1:
+    headers = ['PV size \n(kW)', 'Battery size \n(kWh)', 'Opt. did not work in', 'Opt. infeasible in', \
+                'ISS \n(%)', 'ISC \n(%)', 'Shared energy \n(kWh/year)', 'PV production \n(kWh/year)', 'Consumption \n(kWh/year)', \
+                'Grid feed \n(kWh)', 'Grid purchase \n(kWh)', 'Battery charge \n(kWh)', 'Battery discharge \n(kWh)']
 
-headers = ['PV size (kW)', 'Battery size (kWh)', 'Opt. did not work in', 'Opt. infeasible in', \
-            'ISS (%)', 'ISC (%)', 'Shared energy (kWh/year)']
-message = '\nOptimization status and results (self-sufficiency and self-consumption indices, shared energy)'
+  
+print('\n{0:d} configuration(s) evaluated in {1:.3f} s.'.format(n_configurations, toc()))
+
+message = '\nOptimization status and results (self-sufficiency and self-consumption indices, shared energy, etc.)\n'
 print(message) 
-print(tabulate(tab_sizes, headers = headers))
+print(tabulate(tab_results, headers = headers))
+
+    
+dirname = 'Output'
+
+# Creating an /Output/Figures folder, if not already existing
+subdirname = 'Figures'
+
+try: Path.mkdir(basepath / dirname / subdirname)
+except Exception: pass
+
+# Creating a subfolder, if not already existing
+subsubdirname = '{}_{}_{}'.format(location, en_class, n_hh)
+
+try: Path.mkdir(basepath / dirname / subdirname / subsubdirname)
+except Exception: pass
+
+if n_configurations != 1:
+
+    main_size_range = pv_size_range
+    lead_size_range = battery_size_range
+
+    n_sizes_main = len(main_size_range)
+    n_sizes_lead = len(lead_size_range)
+
+    plot_specs = {
+        0: {'type': 'plot', 'yaxis': 'right', 'label': 'ISS'},
+        1: {'type': 'plot', 'yaxis': 'right', 'label': 'ISC'},
+        2: {'type': 'bar', 'yaxis': 'left', 'label': 'Shared energy'},
+        }
+
+    fig_specs = {
+        'suptitle': 'Parametric analysis',
+        'xaxis_label': 'PV size (kW)',
+        'yaxis_right_label': 'Performance index (%)',
+        'yaxis_left_label': 'Energy (kWh/year)',
+        'lead_size_name': 'Battery',
+        'lead_size_uom': 'kWh',
+        'yaxis_right_ylim': [0, 1.1*np.max(np.maximum(iss_configurations, isc_configurations))],
+        'yaxis_left_ylim': [0, 1.1*np.max(esh_configurations)],
+        }
+
+    data = data = np.stack((iss_configurations, isc_configurations, esh_configurations), axis = 2)
+
+    if n_pv_sizes == 1:
+        main_size_range = battery_size_range
+        lead_size_range = pv_size_range
+        fig_specs['xaxis_label'] = 'Battery size (kWh)'
+        fig_specs['lead_size_name'] = 'PV'
+        fig_specs['lead_size_uom'] = 'kW'
+        data = np.transpose(data, axes = (1, 0, 2))
+
+    fig = plot.parametric_analysis(main_size_range, lead_size_range, data, plot_specs, fig_specs, **{'orientation': 'vertical'})
+    
+    filename = '{}_{}_{}_{}_parametric_analysis.png'.format(location, en_class, season, n_hh)
+    fpath = basepath / dirname / subdirname / subsubdirname
+            
+    fig.savefig(fpath / filename) 
+
+    plt.show()
+    plt.close(fig)
+
+
+if n_configurations == 1:
+
+    pv_production_month_day = results['pv_production_month_day']
+    consumption_month_day = results['consumption_month_day']
+    grid_feed_month_day = results['grid_feed_month_day']
+    grid_purchase_month_day = results['grid_purchase_month_day']
+    battery_charge_month_day = results['battery_charge_month_day']
+    battery_discharge_month_day = results['battery_discharge_month_day']
+    battery_energy_month_day = results['battery_energy_month_day']
+    shared_power_month_day = results['shared_power_month_day']
+
+    # Plotting the quantities for each month
+
+    plot_specs = {
+        0: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'pv_production', 'plot_color': colors_rgb[0], 'plot_linestyle': '-', 'plot_marker': 's'},
+        1: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'consumption', 'plot_color': colors_rgb[3], 'plot_linestyle': '-', 'plot_marker': 'o'},
+        2: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'grid_feed', 'plot_color': colors_rgb[2], 'plot_linestyle': '-', 'plot_marker': ''},
+        3: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'grid_purchase', 'plot_color': colors_rgb[4], 'plot_linestyle': '-', 'plot_marker': 's'},
+        4: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'battery_charge', 'plot_color': colors_rgb[6], 'plot_linestyle': '--'},
+        5: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'battery_discharge', 'plot_color': colors_rgb[7], 'plot_linestyle': '--'},
+        6: {'plot_type': 'bar', 'plot_yaxis': 'left', 'plot_label': 'shared_power', 'plot_color': colors_rgb[9], 'plot_alpha': 0.5},
+        7: {'plot_type': 'plot', 'plot_yaxis': 'right', 'plot_label': 'battery SOC', 'plot_color': colors_rgb[11], 'plot_linestyle': '--'},
+    }
+
+    fig_specs = {
+        'suptitle': '\n'.join(('\nPower fluxes during two typical days', \
+                    'for {} households with {} energetic class in the {} of Italy'\
+                    .format(n_hh, en_class, location.capitalize()))),
+        'xaxis_label': 'Time (h)',
+        'yaxis_left_label': 'Power (kW)',
+        'yaxis_right_label': 'SOC (%)',
+    }
+
+    for month in months:
+
+        mm = months[month]['id'][0]
+
+        fig_specs['title'] = month
+        
+        # plot_params = {
+        # 'time_scale': 'h',
+        # 'power_scale': 'kW',
+        # 'energy_scale': 'MWh',
+        # 'figsize': (297/25.4 , 420/25.4),
+        # 'orientation': 'horizontal',
+        # 'font_small': 14,
+        # 'font_medium': 16,
+        # 'font_large': 18,
+        # }
+
+        # # Figure setup: figure size and orientation, font-sizes 
+        # figsize = plot_params['figsize']
+        # orientation = plot_params['orientation']
+
+        # if orientation == 'horizontal': figsize = figsize[::-1]
+
+        # fontsize_title = plot_params['font_large']
+        # fontsize_legend = plot_params['font_medium']
+        # fontsize_labels = plot_params['font_medium']
+        # fontsize_text = plot_params['font_medium']
+        # fontsize_ticks = plot_params['font_small']
+        # fontsize_pielabels = plot_params['font_small']
+
+        # # Creating a figure with multiple subplots, with two rows (one for each type of day)
+        # fig, ax = plt.subplots(2, 1, sharex = False, sharey = False, figsize = figsize)
+        
+        # # suptitle = 'Results in {}'.format(month)
+        # # fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
+        # fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.85, wspace = None, hspace = 0.3)
+
+
+
+        powers = np.stack((pv_production_month_day[:, mm, :],
+                        consumption_month_day[:, mm, :],
+                        grid_feed_month_day[:, mm, :],
+                        grid_purchase_month_day[:, mm, :],
+                        battery_charge_month_day[:, mm, :],
+                        battery_discharge_month_day[:, mm, :],
+                        shared_power_month_day[:, mm, :],
+                        battery_energy_month_day[:, mm, :]/battery_size*100),
+                        axis = 0)
+
+        for day in days:
+
+            dd = days[day][0]
+
+
+            # # Plotting the value for the typical day
+            # ax[dd].plot(time_sim + dt/2, pv_production_month_day[:, mm, dd], label = 'pv_production')
+            # ax[dd].plot(time_sim + dt/2, consumption_month_day[:, mm, dd], label = 'consumption')
+            # ax[dd].plot(time_sim + dt/2, grid_feed_month_day[:, mm, dd], label = 'grid_feed')
+            # ax[dd].plot(time_sim + dt/2, grid_purchase_month_day[:, mm, dd], label = 'grid_purchase')
+            # ax[dd].plot(time_sim + dt/2, battery_charge_month_day[:, mm, dd], label = 'battery_charge')
+            # ax[dd].plot(time_sim + dt/2, battery_discharge_month_day[:, mm, dd], label = 'battery_discharge')
+
+            # ax[dd].bar(time_sim, shared_power_month_day[:, mm, dd], color = 'k', width = dt, align = 'edge', label = 'shared power', alpha = 0.3)
+            
+            # title = '{}, {}'.format(month.capitalize(), day)
+            # ax[dd].set_title(title, fontsize = fontsize_title)
+
+            # axtw = ax[dd].twinx()
+            # axtw.plot(time_sim + dt/2, battery_energy_month_day[:, mm, dd]/battery_size*100, 'r--', label = 'energy battery')
+            
+            # # Making the figure look properly
+        
+            # ax[dd].set_xlabel('Time ({})'.format('h'), fontsize = fontsize_labels)
+            # ax[dd].set_ylabel('Power ({})'.format('kW'), fontsize = fontsize_labels)
+            # ax[dd].set_xlim([time_sim[0], time_sim[-1]])
+            # # Set one tick each hour on the x-axis
+            # ax[dd].set_xticks(list(time_sim[: : int(dt)]))
+            # ax[dd].tick_params(axis ='both', labelsize = fontsize_ticks)
+            # ax[dd].tick_params(axis ='x', labelrotation = 0)
+            # ax[dd].grid()
+            # ax[dd].legend(loc = 'upper left', fontsize = fontsize_legend, ncol = 2)
+
+            # axtw.set_ylabel('SOC ({})'.format('%'), fontsize = fontsize_labels)
+            # axtw.legend(loc = 'upper right', fontsize = fontsize_legend, ncol = 2)
+            # axtw.set_ylim([0, 100])
+
+        fig = plot.daily_profiles(time_sim, powers, plot_specs, fig_specs, **params)
+
+        filename = '{}_{}_{}_{}_power_fluxes.png'.format(location, en_class, month, n_hh)
+        fpath = basepath / dirname / subdirname / subsubdirname
+        
+        fig.savefig(fpath / filename)
+        plt.close(fig)
+
+plt.show()
+
+
+
+    
+    
+
+
+
+
+
+
+
+
 
 
 
