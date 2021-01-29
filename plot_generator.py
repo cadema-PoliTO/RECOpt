@@ -81,153 +81,6 @@ for color in colors:
     colors_rgb.append(tuple(color_rgb))
 
 
-## Seasonal load profiles
-# A method for plotting the load profiles for both day-types, for each season is created.
-
-def seasonal_load_profiles(time, powers, season, plot_specs, fig_specs, **params):
-
-    ''' The method returns a figure-handle where seasonal load profiles are plotted, for 
-        both day types.
-    
-    Inputs:
-        time - 1d array, vector of time 
-        powers - 3d array, different types (axis = 0) of time-load profiles to be plotted (axis = 1) for each day-type (axis = 2)
-        season - str, containing the name of the season
-        plot_specs - dict, for each type of load profile, the type of plot (str, bar plot or plot) and the legend (str)
-        fig_specs - dict, containing specific indications such suptitle, etc.
-        **params(if not specified, default values are used)
-            - 'time_scale': str, 's', 'h'
-            - 'power_scale': str,'W', 'kW'
-            - 'energy_scale': str, 'Wh', 'kWh', MWh'
-            - 'figsize': tup, height and width of the figure
-            - 'orientation': str, 'horizontal', 'vertical'
-            - 'font_small': float, size of the small fonts (ticks, ...)
-            - 'font_medium': float, size of the medium fonts (legend, labels, ...)
-            - 'font_large': float, size of the large fonts (titles, ...)
-            - all the simulation parameters (n_hh, en_class, etc.)
-    
-    Outputs:
-        fig - figure handle
-    '''
-   
-
-    ## Input data for the appliances
-    # Appliances' attributes, energy consumptions and user's coefficients 
-
-    # # apps is a 2d-array in which, for each appliance (rows) and attribute value is given (columns)
-    # apps_ID = appliances_data['apps_ID']
-
-    # # apps_attr is a dictionary in which the name of each attribute (value) is linked to its columns number in apps (key)
-    # apps_attr = appliances_data['apps_attr']
-       
-
-    ## Parameters
-    
-    # Default parameters
-    def_params = {
-    'time_scale': 'h',
-    'power_scale': 'kW',
-    'energy_scale': 'MWh',
-    'figsize': (297/25.4 , 420/25.4),
-    'orientation': 'horizontal',
-    'font_small': 14,
-    'font_medium': 16,
-    'font_large': 18,
-    }
-    
-    # The parameters that are not specified when the function is called are set to the default value
-    for param in def_params: 
-        if param not in params: params[param] = def_params[param]
-
-    ## Updating parameters
-
-    # Scales setup: factors needed to turn the values of time, power and energy in the correct scale
-    time_scale = params['time_scale']
-    power_scale = params['power_scale']
-    # energy_scale = params['energy_scale']
-
-    ts = ts_dict[time_scale]
-    ps = ps_dict[power_scale]
-    # es = es_dict[energy_scale]
-
-    # Adjusting time, power and energy to the proper scales
-    time = time*ts
-    powers = powers*ps
-    
-    ##
-    # Figure setup: figure size and orientation, font-sizes 
-    figsize = params['figsize']
-    orientation = params['orientation']
-
-    if orientation == 'horizontal': figsize = figsize[::-1]
-
-    fontsize_title = params['font_large']
-    fontsize_legend = params['font_medium']
-    fontsize_labels = params['font_medium']
-    # fontsize_text = params['font_medium']
-    fontsize_ticks = params['font_small']
-    # fontsize_pielabels = params['font_small']
-
-    ##
-    # Creating a figure with multiple subplots, with two rows (one for each type of day)
-    fig, ax = plt.subplots(2, 1, sharex = False, sharey = False, figsize = figsize)
-    
-    suptitle = fig_specs['suptitle']
-    fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
-    fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.85, wspace = None, hspace = 0.3)
-   
-    ##
-    # Evaluating the time-step of the time-vector in order to set the bars' width
-    dt = float((time[-1] - time[0])/(np.size(time) - 1))
-
-    # Evaluating the number of profiles passed to the function for each day-type 
-    # It is given for ganted that only two day-types are considered
-    n_lps = np.size(powers, axis = 0)
-
-    
-    ##
-    #Running through the day-types (week-day and weekend-day)
-    for day in days:
-
-        # Number corresponding to the type of day (0: week-day, 1: week-end -day)
-        dd = days[day][0] 
-
-        # Running through the types of load profiles to be plotted for each day-type
-        for lp in range(n_lps):
-
-            # Selecting the correct power-data to plot and the plot specifications
-            power = powers[lp, :, dd]
-            plot_type = plot_specs[lp][0]
-            label = plot_specs[lp][1]
-
-            if plot_type == 'plot':
-                ax[dd].plot(time + dt/2, power, color = colors_rgb[lp], linestyle = '-', label = label)
- 
-            elif plot_type == 'bar':
-                ax[dd].bar(time, power, color = colors_rgb[lp], width = dt, align = 'edge', label = label)
-        
-        title = '{}, {}'.format(season.capitalize(), day)
-        ax[dd].set_title(title, fontsize = fontsize_title)
-        
-    ##
-    # Making the figure look properly
-    for axi in ax.flatten():
-        axi.set_xlabel('Time ({})'.format(time_scale), fontsize = fontsize_labels)
-        axi.set_ylabel('Power ({})'.format(power_scale), fontsize = fontsize_labels)
-        axi.set_xlim([time[0], time[-1]])
-        ymin = np.min(powers); ymax = np.max(powers)
-        axi.set_ylim([0.9*ymin, 1.1*ymax])
-        # Set one tick each hour on the x-axis
-        axi.set_xticks(list(time[: : int(60*ts/dt)]))
-        axi.tick_params(axis ='both', labelsize = fontsize_ticks)
-        axi.tick_params(axis ='x', labelrotation = 0)
-        axi.grid()
-        axi.legend(loc = 'upper left', fontsize = fontsize_legend, ncol = 2)
-    
-    ##
-    return(fig)
-
-
 ## Seasonal energy consumptions
 # A method for plotting the energy consumption by season (total or average) from appliances or classes of appliances 
 # is created.
@@ -692,9 +545,6 @@ def parametric_analysis(main_size_range, lead_size_range, data, plot_specs, fig_
         plot_specs - dict, containing for each type of data some plotting information
         fig_specs -dict, containing plot information for the figure
         **params(if not specified, default values are used)
-            - 'time_scale': str, 's', 'h'
-            - 'power_scale': str,'W', 'kW'
-            - 'energy_scale': str, 'Wh', 'kWh', MWh'
             - 'figsize': tup, height and width of the figure
             - 'orientation': str, 'horizontal', 'vertical'
             - 'font_small': float, size of the small fonts (ticks, ...)
@@ -754,7 +604,7 @@ def parametric_analysis(main_size_range, lead_size_range, data, plot_specs, fig_
 
     suptitle = fig_specs['suptitle']
     fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
-    fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.9, wspace = 0, hspace = 0.2)
+    fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.9, wspace = 0, hspace = 0.3)
 
     # Needed to set the bars width in bar plots
     d_main_size = (main_size_range[-1]-main_size_range[0])/n_sizes_main
@@ -850,6 +700,137 @@ def parametric_analysis(main_size_range, lead_size_range, data, plot_specs, fig_
     return fig
 
 
+## Parametric chart
+# A method is created for plotting pairs of sizes in correspondence of two indicators' values
+
+def parametric_chart(plot_specs, fig_specs, **params):
+
+    ''' The method returns a figure-handle where the percentage over the total energy consumption 
+    for appliances or class of appliances is plotted, divided by season.
+    
+    Input:
+        plot_specs - dict, containing for each plot, the data (x_values, y_values) and other information 
+        fig_specs -dict, containing plot information for the figure
+        **params(if not specified, default values are used)
+            - 'figsize': tup, height and width of the figure
+            - 'orientation': str, 'horizontal', 'vertical'
+            - 'font_small': float, size of the small fonts (ticks, ...)
+            - 'font_medium': float, size of the medium fonts (legend, labels, ...)
+            - 'font_large': float, size of the large fonts (titles, ...)
+    
+    Output:
+        fig - figure handle
+
+    '''
+    
+
+    ## Parameters
+
+    # Default parameters
+    def_params = {
+    'figsize': (297/25.4 , 420/25.4),
+    'orientation': 'horizontal',
+    'font_small': 14,
+    'font_medium': 16,
+    'font_large': 18,
+    }
+    
+    ##
+    # Setting the parameters that are not specified when the function is called to the default value
+    for param in def_params: 
+        if param not in params: params[param] = def_params[param]
+
+    # Figure setup: figure size and orientatio, font-sizes 
+    figsize = params['figsize']
+    orientation = params['orientation']
+
+    if orientation == 'horizontal': figsize = figsize[::-1]
+
+    fontsize_title = params['font_medium']
+    fontsize_legend = params['font_small']
+    fontsize_labels = params['font_small']
+    # fontsize_text = params['font_medium']
+    fontsize_ticks = params['font_small']
+    # fontsize_pielabels = params['font_small']
+
+
+    ##
+    # Creating a figure with multiple subplots, with two rows (one for each type of day)
+    fig, ax = plt.subplots(figsize = figsize)
+
+    suptitle = fig_specs['suptitle']
+    fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
+    fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.9, wspace = 0, hspace = 0.3)
+    
+    # If there is something to be plotted on the yaxis right, the flag is deactivated
+    yaxis_right_flag = 1
+
+    # The number of plots on each yaxis are taken into account (to set the number of cols in the legend)
+    n_plot_left = 0
+    n_plot_right = 0
+
+    for i_plot in plot_specs:
+        
+        x_data = plot_specs[i_plot]['plot_xvalues']
+        y_data = plot_specs[i_plot]['plot_yvalues']
+
+        try: plot_yaxis = plot_specs[i_plot]['plot_yaxis']
+        except: plot_yaxis = 'left'
+
+        try: plot_color = plot_specs[i_plot]['plot_color']
+        except: plot_color = colors_rgb[i_plot]
+
+        try: plot_label = plot_specs[i_plot]['plot_label']
+        except: plot_label = ''
+        
+        try: plot_linestyle = plot_specs[i_plot]['plot_linestyle']
+        except: plot_linestyle = '-'
+
+        try: plot_marker = plot_specs[i_plot]['plot_marker']
+        except: plot_marker = 's'
+
+        if plot_yaxis == 'right':
+
+            if yaxis_right_flag == 1:
+               axtw = ax.twinx()
+               yaxis_right_flag = 0
+                
+            axtw.plot(x_data, y_data, color = plot_color, linestyle = plot_linestyle, marker = plot_marker, label = plot_label)
+            n_plot_right += 1
+
+        else:
+
+            ax.plot(x_data, y_data, color = plot_color, linestyle = plot_linestyle, marker = plot_marker, label = plot_label)
+            n_plot_left += 1
+   
+        # Making the subplot looking nice
+
+    ax.set_xlabel(fig_specs['xaxis_label'], fontsize = fontsize_labels)
+    ax.set_xlim(fig_specs['xaxis_lim'])
+    ax.xaxis.set_major_locator(plt.MaxNLocator(10))
+    
+    ax.set_ylabel(fig_specs['yaxis_label'], fontsize = fontsize_labels)
+    ax.set_ylim(fig_specs['yaxis_lim'])
+    ax.yaxis.set_major_locator(plt.MaxNLocator(10))
+
+    ax.tick_params(axis ='both', labelsize = fontsize_ticks)
+
+    max_cols = 2; ncol = min(max_cols, n_plot_left)
+    ax.legend(loc = 'upper left', ncol = ncol, fontsize = fontsize_legend)
+    ax.grid()
+
+    if yaxis_right_flag == 0:
+
+        axtw.axis('off')
+        axtw.set_ylim(fig_specs['yaxis_lim'])
+        max_cols = 3; ncol = min(max_cols, n_plot_right)
+        axtw.legend(loc = 'upper right', ncol = ncol, fontsize = fontsize_legend)
+
+    return fig
+
+
+## Daily profiles
+# A method for plotting various profiles (power/energy) during two typical days (week-day and weekend) 
 def daily_profiles(time, powers, plot_specs, fig_specs, **params):
 
     ''' The method returns a figure-handle where seasonal load profiles are plotted, for 
@@ -1009,9 +990,8 @@ def daily_profiles(time, powers, plot_specs, fig_specs, **params):
         ax[dd].set_ylim([0.9*ymin_left, 1.1*ymax_left])
         ax[dd].grid(axis = 'y')
 
-        max_col = 2
-        if n_plot_left > max_col: n_plot_left = max_col
-        ax[dd].legend(loc = 'upper left', ncol = n_plot_left, fontsize = fontsize_legend)
+        max_col = 2; ncol = min(max_col, n_plot_left)
+        ax[dd].legend(loc = 'upper left', ncol = ncol, fontsize = fontsize_legend)
 
         title = '{}, {}'.format(fig_specs['title'].capitalize(), day)
         ax[dd].set_title(title, fontsize = fontsize_title)
@@ -1030,31 +1010,151 @@ def daily_profiles(time, powers, plot_specs, fig_specs, **params):
     return(fig)
 
 
+## Seasonal load profiles
+# A method for plotting the load profiles for both day-types, for each season is created.
 
+def seasonal_load_profiles(time, powers, season, plot_specs, fig_specs, **params):
 
-# time_sim = np.arange(0, 1440, 60)
-# powers = np.random.randint(100, size = (4, 24, 2))
+    ''' The method returns a figure-handle where seasonal load profiles are plotted, for 
+        both day types.
+    
+    Inputs:
+        time - 1d array, vector of time 
+        powers - 3d array, different types (axis = 0) of time-load profiles to be plotted (axis = 1) for each day-type (axis = 2)
+        season - str, containing the name of the season
+        plot_specs - dict, for each type of load profile, the type of plot (str, bar plot or plot) and the legend (str)
+        fig_specs - dict, containing specific indications such suptitle, etc.
+        **params(if not specified, default values are used)
+            - 'time_scale': str, 's', 'h'
+            - 'power_scale': str,'W', 'kW'
+            - 'energy_scale': str, 'Wh', 'kWh', MWh'
+            - 'figsize': tup, height and width of the figure
+            - 'orientation': str, 'horizontal', 'vertical'
+            - 'font_small': float, size of the small fonts (ticks, ...)
+            - 'font_medium': float, size of the medium fonts (legend, labels, ...)
+            - 'font_large': float, size of the large fonts (titles, ...)
+            - all the simulation parameters (n_hh, en_class, etc.)
+    
+    Outputs:
+        fig - figure handle
+    '''
+   
 
-# plot_specs = {
-#     0: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'Tutù', 'plot_color': 'b', 'plot_linestyle': '--', 'plot_marker': 's'},
-#     1: {'plot_type': 'plot', 'plot_yaxis': 'left', 'plot_label': 'Tettarella', 'plot_color': 'r', 'plot_linestyle': '-', 'plot_marker': 'o'},
-#     2: {'plot_type': 'bar', 'plot_yaxis': 'left', 'plot_label': 'Gigi', 'plot_color': 'y', 'plot_linestyle': '--', 'plot_marker': 's'},
-#     3: {'plot_type': 'bar', 'plot_yaxis': 'right', 'plot_label': 'Bernie', 'plot_color': 'k', 'plot_linestyle': '--', 'plot_marker': 's'},
-#     }
+    ## Input data for the appliances
+    # Appliances' attributes, energy consumptions and user's coefficients 
 
-# fig_specs = {
-#     'suptitle': 'annarella',
-#     'title': 'maccox',
-#     'xaxis_label': 'ciccilli (m)',
-#     'yaxis_left_label': 'Pastrelli (kWs)',
-#     'yaxis_right_label': 'Kiwii',
-#     }
+    # # apps is a 2d-array in which, for each appliance (rows) and attribute value is given (columns)
+    # apps_ID = appliances_data['apps_ID']
 
-# fig = daily_profiles(time_sim, powers, plot_specs, fig_specs)
-# plt.show()
+    # # apps_attr is a dictionary in which the name of each attribute (value) is linked to its columns number in apps (key)
+    # apps_attr = appliances_data['apps_attr']
+       
 
+    ## Parameters
+    
+    # Default parameters
+    def_params = {
+    'time_scale': 'h',
+    'power_scale': 'kW',
+    'energy_scale': 'MWh',
+    'figsize': (297/25.4 , 420/25.4),
+    'orientation': 'horizontal',
+    'font_small': 14,
+    'font_medium': 16,
+    'font_large': 18,
+    }
+    
+    # The parameters that are not specified when the function is called are set to the default value
+    for param in def_params: 
+        if param not in params: params[param] = def_params[param]
 
+    ## Updating parameters
 
+    # Scales setup: factors needed to turn the values of time, power and energy in the correct scale
+    time_scale = params['time_scale']
+    power_scale = params['power_scale']
+    # energy_scale = params['energy_scale']
+
+    ts = ts_dict[time_scale]
+    ps = ps_dict[power_scale]
+    # es = es_dict[energy_scale]
+
+    # Adjusting time, power and energy to the proper scales
+    time = time*ts
+    powers = powers*ps
+    
+    ##
+    # Figure setup: figure size and orientation, font-sizes 
+    figsize = params['figsize']
+    orientation = params['orientation']
+
+    if orientation == 'horizontal': figsize = figsize[::-1]
+
+    fontsize_title = params['font_large']
+    fontsize_legend = params['font_medium']
+    fontsize_labels = params['font_medium']
+    # fontsize_text = params['font_medium']
+    fontsize_ticks = params['font_small']
+    # fontsize_pielabels = params['font_small']
+
+    ##
+    # Creating a figure with multiple subplots, with two rows (one for each type of day)
+    fig, ax = plt.subplots(2, 1, sharex = False, sharey = False, figsize = figsize)
+    
+    suptitle = fig_specs['suptitle']
+    fig.suptitle(suptitle, fontsize = fontsize_title, fontweight = 'bold')
+    fig.subplots_adjust(left = 0.1, bottom = 0.1, right = 0.9, top = 0.85, wspace = None, hspace = 0.3)
+   
+    ##
+    # Evaluating the time-step of the time-vector in order to set the bars' width
+    dt = float((time[-1] - time[0])/(np.size(time) - 1))
+
+    # Evaluating the number of profiles passed to the function for each day-type 
+    # It is given for ganted that only two day-types are considered
+    n_lps = np.size(powers, axis = 0)
+
+    
+    ##
+    #Running through the day-types (week-day and weekend-day)
+    for day in days:
+
+        # Number corresponding to the type of day (0: week-day, 1: week-end -day)
+        dd = days[day][0] 
+
+        # Running through the types of load profiles to be plotted for each day-type
+        for lp in range(n_lps):
+
+            # Selecting the correct power-data to plot and the plot specifications
+            power = powers[lp, :, dd]
+            plot_type = plot_specs[lp][0]
+            label = plot_specs[lp][1]
+
+            if plot_type == 'plot':
+                ax[dd].plot(time + dt/2, power, color = colors_rgb[lp], linestyle = '-', label = label)
+ 
+            elif plot_type == 'bar':
+                ax[dd].bar(time, power, color = colors_rgb[lp], width = dt, align = 'edge', label = label)
+        
+        title = '{}, {}'.format(season.capitalize(), day)
+        ax[dd].set_title(title, fontsize = fontsize_title)
+        
+    ##
+    # Making the figure look properly
+    for axi in ax.flatten():
+        axi.set_xlabel('Time ({})'.format(time_scale), fontsize = fontsize_labels)
+        axi.set_ylabel('Power ({})'.format(power_scale), fontsize = fontsize_labels)
+        axi.set_xlim([time[0], time[-1]])
+        ymin = np.min(powers); ymax = np.max(powers)
+        axi.set_ylim([0.9*ymin, 1.1*ymax])
+        # Set one tick each hour on the x-axis
+        axi.set_xticks(list(time[: : int(60*ts/dt)]))
+        axi.tick_params(axis ='both', labelsize = fontsize_ticks)
+        axi.tick_params(axis ='x', labelrotation = 0)
+        axi.grid()
+        axi.legend(loc = 'upper left', fontsize = fontsize_legend, ncol = 2)
+    
+    ##
+    return(fig)
 
 
 

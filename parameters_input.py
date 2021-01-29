@@ -291,6 +291,7 @@ def simulation_setup(tech):
         'size': {'type': float, 'default_val': 0.5, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
         'size_min': {'type': float, 'default_val': 0.5, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
         'size_max': {'type': float, 'default_val': 1., 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
+        'n_sizes': {'type': int, 'default_val': 1, 'min_val': 1, 'max_val': 5, 'uom': '(/)'}
         }
 
     if tech.strip("',.=\"_ ").lower().replace(' ', '_').replace('-', '_') == 'battery':
@@ -303,6 +304,7 @@ def simulation_setup(tech):
     param_dict['size']['description'] = 'Fixed size for {}'.format(tech)
     param_dict['size_min']['description'] = 'Minimum size of the {}'.format(tech)
     param_dict['size_max']['description'] = 'Maximum size of the {}'.format(tech)
+    param_dict['n_sizes']['description'] = 'Number of sizes of the {} to be evaluated'.format(tech)
 
     # The current values for the parameters a read from the file parameters.csv. If it does not exist yet
     # default values are assigned to the parameters
@@ -329,6 +331,8 @@ def simulation_setup(tech):
         param = 'size_min'
         tab.append([param, params[param], param_dict[param]['uom'].strip('() '), param_dict[param]['description']])
         param = 'size_max'
+        tab.append([param, params[param], param_dict[param]['uom'].strip('() '), param_dict[param]['description']])
+        param = 'n_sizes'
         tab.append([param, params[param], param_dict[param]['uom'].strip('() '), param_dict[param]['description']])
 
     print(tabulate(tab, headers=['Parameter', 'Value', 'Unit of measure', 'Description']))
@@ -493,9 +497,32 @@ def simulation_setup(tech):
 
                 # Making sure size_min is smaller than size_max
                 if size_min > size_max: size_min, size_max = size_max, size_min
+
+                # Number of sizes
+                message = 'Enter the number of sizes of the {} to be evaluated: '.format(tech)
+                n_sizes = input(message).strip("',.=\"_ ").lower().replace(' ', '_').replace('-', '_')
+
+                try: default_value = params['n_sizes']
+                except: default_value = param_dict['n_sizes']['default_val']
+                low_lim = param_dict['n_sizes']['min_val']
+                up_lim = param_dict['n_sizes']['max_val']
                 
+                while True: 
+
+                    if n_sizes in stop_commands: n_sizes = default_value; break
+
+                    try: n_sizes = int(n_sizes)
+                    except: n_sizes = input('Please, enter an integer: ') \
+                        .strip("',.=\"_ ").lower().replace(' ', '_').replace('-', '_'); continue
+                    
+                    if n_sizes >= low_lim and n_sizes <= up_lim: break
+                    else: n_sizes  = input('I am good but I can be slow! Please enter an integer between {} and {}: '.format(low_lim, up_lim)) \
+                        .strip("',.=\"_ ").lower().replace(' ', '_').replace('-', '_'); continue
+
+                # Storing the updated parameters
                 params['size_min'] = size_min
                 params['size_max'] = size_max
+                params['n_sizes'] = n_sizes
             
             # If the simulation type has been changed and the size/range boundaries have been changed as well there is
             # nothing left to change, so the loop can be broken
@@ -530,7 +557,7 @@ def simulation_setup(tech):
 
     if params['sim_type'] == 'parametric':
 
-        if params['size_min'] == params['size_max']:
+        if params['size_min'] == params['size_max'] or params['n_sizes'] == 1:
             save_params = {
                 'sim_type': 'fixed',
                 'size': params['size_min']
@@ -541,6 +568,7 @@ def simulation_setup(tech):
                 'sim_type': params['sim_type'],
                 'size_min': params['size_min'],
                 'size_max': params['size_max'],
+                'n_sizes': int(params['n_sizes']),
             }
 
     elif params['sim_type'] == 'fixed':
@@ -569,24 +597,36 @@ def simulation_setup(tech):
     sim_type = save_params['sim_type']
 
     # Updating the range's boundaries to the user's input
-    if sim_type == 'fixed': size_min, size_max = save_params['size'], save_params['size']
-    if sim_type == 'parametric': size_min, size_max = save_params['size_min'], save_params['size_max']
+    if sim_type == 'fixed': size_min, size_max, n_sizes = save_params['size'], save_params['size'], 1
+    if sim_type == 'parametric': size_min, size_max, n_sizes = save_params['size_min'], save_params['size_max'], save_params['n_sizes']
 
     # The boundaries are rounded up to .5 precision
     size_min = int(size_min*2)/2
     size_max = int(size_max*2)/2
+    n_sizes = int(n_sizes)
 
     # The length of the range is evaluated
-    size_range_length = size_max - size_min
+    size_range_length = max(size_max - size_min, 0.5)
 
-    # The step for the size is chosen depending on the length of the range
-    if size_range_length <= 2.5: d_size = 0.5
-    elif size_range_length > 2.5 and size_range_length <=5: d_size = 1
-    elif size_range_length > 5 and size_range_length <= 10: d_size = 2
-    else: d_size = int(size_range_length/5)
+    # Making sure that the difference in size is at least of 0.5 (in case this does not happen, the number of sizes is decreased)
+    n_sizes = min(n_sizes, int(2*size_range_length + 1))
 
-    # The range is created 
-    size_range = np.arange(size_min, size_max + d_size, d_size)
-    if size_range[-1] != size_max: size_range[-1] = size_max
+    # Creating the size range and making sure that all sizes are rounded up to .5
+    size_range = np.linspace(size_min, size_max, n_sizes)
+    size_range = [int(size*2)/2 for size in size_range]
+
+
+#     # The length of the range is evaluated
+#     size_range_length = size_max - size_min
+
+#     # The step for the size is chosen depending on the length of the range
+#     if size_range_length <= 2.5: d_size = 0.5
+#     elif size_range_length > 2.5 and size_range_length <=5: d_size = 1
+#     elif size_range_length > 5 and size_range_length <= 10: d_size = 2
+#     else: d_size = int(size_range_length/5)
+
+#     # The range is created 
+#     size_range = np.arange(size_min, size_max + d_size, d_size)
+#     if size_range[-1] != size_max: size_range[-1] = size_max
 
     return(save_params, list(size_range))

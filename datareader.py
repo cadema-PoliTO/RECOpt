@@ -128,7 +128,8 @@ def read_general(filename,delimit,dirname):
                 
     except:
         
-        print('Unable to open this file')
+        print('')
+        # print('Unable to open this file')
     
     # Creating a 2D-array containing the data(time in the first column and power in the second one)
     data = np.array(data_list,dtype='float')

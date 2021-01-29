@@ -451,43 +451,134 @@ import matplotlib.pyplot as plt
 # ymin_right, ymax_right = 0, 0
 
 
-colors = [(230, 25, 75),
-        (60, 180, 75),
-        (255, 225, 25),
-        (0, 130, 200),
-        (245, 130, 48),
-        (145, 30, 180),
-        (70, 240, 240),
-        (240, 50, 230),
-        (210, 245, 60),
-        (250, 190, 212),
-        (0, 128, 128),
-        (220, 190, 255),
-        (170, 110, 40),
-        (255, 250, 200),
-        (128, 0, 0),
-        (170, 255, 195),
-        (128, 128, 0),
-        (255, 215, 180),
-        (0, 0, 128),
-        (128, 128, 128)]
+# colors = [(230, 25, 75),
+#         (60, 180, 75),
+#         (255, 225, 25),
+#         (0, 130, 200),
+#         (245, 130, 48),
+#         (145, 30, 180),
+#         (70, 240, 240),
+#         (240, 50, 230),
+#         (210, 245, 60),
+#         (250, 190, 212),
+#         (0, 128, 128),
+#         (220, 190, 255),
+#         (170, 110, 40),
+#         (255, 250, 200),
+#         (128, 0, 0),
+#         (170, 255, 195),
+#         (128, 128, 0),
+#         (255, 215, 180),
+#         (0, 0, 128),
+#         (128, 128, 128)]
 
-# Transforming into rgb triplets
-colors_rgb = []
-for color in colors:
-    color_rgb = []
-    for value in color:
-        color_rgb.append(float(value)/255) 
-    colors_rgb.append(tuple(color_rgb))
+# # Transforming into rgb triplets
+# colors_rgb = []
+# for color in colors:
+#     color_rgb = []
+#     for value in color:
+#         color_rgb.append(float(value)/255) 
+#     colors_rgb.append(tuple(color_rgb))
 
 
-for i_color in range(len(colors_rgb)):
-    color = colors_rgb[i_color]
-    # plt.plot([0, 1], [i_color + 1, i_color + 2], label = '{}'.format(i_color))
-    plt.bar(i_color, 10, align = 'edge', label = '{}'.format(i_color))
-    plt.xlim([0, len(colors_rgb) + 1])
+# for i_color in range(len(colors_rgb)):
+#     color = colors_rgb[i_color]
+#     # plt.plot([0, 1], [i_color + 1, i_color + 2], label = '{}'.format(i_color))
+#     plt.bar(i_color, 10, align = 'edge', label = '{}'.format(i_color))
+#     plt.xlim([0, len(colors_rgb) + 1])
 
-plt.legend(loc = 'right')
+# plt.legend(loc = 'right')
 
-plt.show()
+# plt.show()
 
+
+# from tictoc import tic, toc
+
+# tic()
+# k = 0
+# for i in range(int(1e6)):
+#     k += i
+#     k += i + 1
+
+# print('{}: {} s'.format(k, toc()))
+
+# tic()
+# k = 0
+# for i in range(int(1e6)):
+#     k += i
+    
+# for i in range(int(1e6)):
+#     k += i + 1
+
+# print('{}: {} s'.format(k, toc()))
+
+# aa = list(range(0, 10, 1))
+# bb = list(range(0, 2, 1))
+
+# print(aa)
+# print(bb)
+
+# aa, bb = bb, aa
+
+# print(aa)
+# print(bb)
+
+
+
+# Creating an /Output folder, if not already existing
+dirname = 'Output'
+
+# Creating an /Output/Files folder, if not already existing
+subdirname = 'Files'
+
+# Creating a subfolder, if not already existing
+subsubdirname = '{}_{}_{}'.format('north', 'D', 10)
+
+
+# try:
+
+#     data_wd = datareader.read_general('consumption_profiles_month_wd.csv', ';', '/'.join((dirname, subdirname, subsubdirname)))
+#     data_we = datareader.read_general('consumption_profiles_month_we.csv', ';', '/'.join((dirname, subdirname, subsubdirname)))
+
+
+#     consumption_month_wd = data_wd[:, 1:]
+#     consumption_month_we = data_we[:, 1:]
+
+#     consumption_month_day = np.stack((consumption_month_wd, consumption_month_we), axis = 2)
+#     print(np.shape(consumption_month_day))
+
+#     message = '\nSome load profiles have already been evaluated for the current configuration, do you want to use them?\
+#            \nPress \'enter\' to skip and re-evaluate the load profiles \
+#            \nEnter \'ok\' to use the available ones: '
+#     load_profiler_flag = input(message).strip('\'",._- ').lower()
+
+#     if load_profiler_flag == '': load_profiler_flag = 0
+#     else: load_profiler_flag = 1
+
+# except:
+#     message = '\nEvaluation of the load profiles for the aggregate of households.'
+#     print(message)
+
+# aa = [1]
+
+# bb = [2,3,6,78,900,4]
+
+# print(aa+ bb)
+
+size_min = 10
+size_max = 10
+n_sizes = 1
+
+size_min = int(size_min*2)/2
+size_max = int(size_max*2)/2
+n_sizes = int(n_sizes)
+
+size_range_length = max(size_max - size_min, 0.5)
+
+# if size_range_length/(n_sizes - 1) < 0.5: n_sizes = int(2*size_range_length + 1)
+n_sizes = min(n_sizes, int(2*size_range_length + 1))
+# print(size_range_length/(n_sizes - 1))
+
+size_range = np.linspace(size_min, size_max, n_sizes)
+size_range = [int(size*2)/2 for size in size_range]
+print(size_range)

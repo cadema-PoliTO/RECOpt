@@ -1,7 +1,0 @@
-'Name';'Value';'Unit of measure'
-'n_hh';10;'(units)'
-'dt_aggr';60;'(min)'
-'ftg_avg';100.0;'(m2)'
-'power_max';3.0;'(kW)'
-'location';'north';'(/)'
-'en_class';'D';'(/)'
