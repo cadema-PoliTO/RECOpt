@@ -21,37 +21,37 @@ from battery_optimization import battery_optimization
 
 
 
-## Plot parameters
+# ## Plot parameters
 
-# Default parameters
-def_params = {
-'time_scale': 'h',
-'power_scale': 'kW',
-'energy_scale': 'MWh',
-'figsize': (297/25.4 , 420/25.4),
-'orientation': 'horizontal',
-'font_small': 14,
-'font_medium': 16,
-'font_large': 18,
-}
+# # Default parameters
+# def_params = {
+# 'time_scale': 'h',
+# 'power_scale': 'kW',
+# 'energy_scale': 'MWh',
+# 'figsize': (297/25.4 , 420/25.4),
+# 'orientation': 'horizontal',
+# 'font_small': 14,
+# 'font_medium': 16,
+# 'font_large': 18,
+# }
 
-# The parameters that are not specified when the function is called are set to the default value
-params = {}
-for param in def_params: 
-    if param not in params: params[param] = def_params[param]
+# # The parameters that are not specified when the function is called are set to the default value
+# params = {}
+# for param in def_params: 
+#     if param not in params: params[param] = def_params[param]
 
-# Figure setup: figure size and orientation, font-sizes 
-figsize = params['figsize']
-orientation = params['orientation']
+# # Figure setup: figure size and orientation, font-sizes 
+# figsize = params['figsize']
+# orientation = params['orientation']
 
-if orientation == 'horizontal': figsize = figsize[::-1]
+# if orientation == 'horizontal': figsize = figsize[::-1]
 
-fontsize_title = params['font_large']
-fontsize_legend = params['font_medium']
-fontsize_labels = params['font_medium']
-fontsize_text = params['font_medium']
-fontsize_ticks = params['font_small']
-fontsize_pielabels = params['font_small']
+# fontsize_title = params['font_large']
+# fontsize_legend = params['font_medium']
+# fontsize_labels = params['font_medium']
+# fontsize_text = params['font_medium']
+# fontsize_ticks = params['font_small']
+# fontsize_pielabels = params['font_small']
 
 
 colors = [(230, 25, 75),
@@ -244,7 +244,7 @@ auxiliary_dict = {
 # Total time of simulation (h) - for each typical day
 time = 24
 
-# Timestep for the simulation (h)
+# Timestep for the simulation (h) (the keyboard input dt_aggr is given in minutes)
 dt = dt_aggr/60
 
 # Vector of time, from 00:00 to 23:59, i.e. 24 h
@@ -293,21 +293,13 @@ pv_production_unit = data_pv[:, 1:]
 if (time_pv[-1] - time_pv[0])/(np.size(time_pv) - 1) != dt:
     
     f_pv = interp1d(time_pv, pv_production_unit, kind = 'linear', axis = 0, fill_value = 'extrapolate')
-    pv_production_unit = f(time_sim)
-
-# fig, ax = plt.subplots(figsize = figsize)
-# for month in months:
-#     mm = months[month]['id'][0]
-#     ax.plot(time_sim, pv_production_unit[:, mm], label = month.capitalize())
-
-# ax.legend()
+    pv_production_unit = f_pv(time_sim)
 
 
 ## Consumption from the aggregate of households 
 
-# Asking the user if detailed graphs and information about the load profile are needed to be stored as files and
+# Asking the user if detailed graphs and information about the load profile are to be stored as files and
 # graphs (it will take some seconds more)
-
 message = '\nEvaluation of the load profiles for the aggregate of households.'
 print(message)
 
@@ -349,22 +341,11 @@ consumption_month_day = np.zeros((time_length, n_months, n_days))
 
 for day in days:
 
-    # fig, ax = plt.subplots(figsize = figsize)
-
     dd = days[day][0]
 
     for timestep in range(time_length):
         consumption_month_day[timestep, :, dd] = \
         np.interp(months_slice, seasons_slice, consumption_seasons[:, timestep, dd], period = n_months)
-
-    # for month in months:
-    #     mm = months[month]['id'][0]
-    #     ax.plot(time_sim, consumption_month_day[:, mm, dd], label = month.capitalize())
-
-    # ax.set_title(day)
-    # ax.legend()
-
-# plt.show()
 
 # # Uncomment to check on energy consumption before and after interpolation between seasons and months
 # yearly_consumption = 0
@@ -618,12 +599,19 @@ try: Path.mkdir(basepath / dirname / subdirname)
 except Exception: pass
 
 # Creating a subfolder, if not already existing
-subsubdirname = '{}_{}_{}_simulation_results'.format(location, en_class, n_hh)
+subsubdirname = '{}_{}_{}'.format(location, en_class, n_hh)
 
 try: Path.mkdir(basepath / dirname / subdirname / subsubdirname)
 except Exception: pass
 
+
 if n_configurations != 1:
+
+    subsubsubdirname = 'shared_energy_results_pv_{}_{}_battery_{}_{}'.format(pv_size_range[0], pv_size_range[-1], battery_size_range[0], battery_size_range[-1])
+
+    try: Path.mkdir(basepath / dirname / subdirname / subsubdirname / subsubsubdirname)
+    except Exception: pass
+
 
     main_size_range = pv_size_range
     lead_size_range = battery_size_range
@@ -662,7 +650,7 @@ if n_configurations != 1:
     
     # filename = '{}_{}_{}_{}_parametric_analysis.png'.format(location, en_class, season, n_hh)
     filename = 'parametric_analysis.png'
-    fpath = basepath / dirname / subdirname / subsubdirname
+    fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
             
     fig.savefig(fpath / filename) 
 
@@ -671,6 +659,11 @@ if n_configurations != 1:
 
 
 if n_configurations == 1:
+
+    subsubsubdirname = 'shared_energy_results_pv_{}_battery{}'.format(pv_size, battery_size)
+
+    try: Path.mkdir(basepath / dirname / subdirname / subsubdirname / subsubsubdirname)
+    except Exception: pass
 
     pv_production_month_day = results['pv_production_month_day']
     consumption_month_day = results['consumption_month_day']
@@ -722,11 +715,14 @@ if n_configurations == 1:
         fig = plot.daily_profiles(time_sim, powers, plot_specs, fig_specs, **params)
 
         # filename = '{}_{}_{}_{}_power_fluxes.png'.format(location, en_class, month, n_hh)
-        filename = '{}_power_fluxes.png'.format(month)
-        fpath = basepath / dirname / subdirname / subsubdirname
+        filename = 'power_fluxes_{}_{}.png'.format(mm, month)
+        fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
         
         fig.savefig(fpath / filename)
         plt.close(fig)
+
+message = '\nThe detailed figures about shared energy have been saved in {}.'.format(fpath)
+print(message)     
 
 plt.show()
 

@@ -975,7 +975,7 @@ def daily_profiles(time, powers, plot_specs, fig_specs, **params):
                     axtw.bar(time, plot_data, width = dt, color = plot_color, align = 'edge', fill = False, label = plot_label, alpha = plot_alpha)
  
                 else:
-                    axtw.plot(time, plot_data, color = plot_color, linestyle = plot_linestyle, marker = plot_marker, label = plot_label)
+                    axtw.plot(time + dt/2, plot_data, color = plot_color, linestyle = plot_linestyle, marker = plot_marker, label = plot_label)
 
                 if np.max(plot_data) > ymax_right: ymax_right = np.max(plot_data)
                 if np.min(plot_data) < ymin_right: ymin_right = np.min(plot_data)
@@ -988,7 +988,7 @@ def daily_profiles(time, powers, plot_specs, fig_specs, **params):
                     ax[dd].bar(time, plot_data, width = dt, color = plot_color, align = 'edge', label = plot_label, alpha = plot_alpha)
  
                 else:
-                    ax[dd].plot(time, plot_data, color = plot_color, linestyle = plot_linestyle, marker = plot_marker, label = plot_label)
+                    ax[dd].plot(time + dt/2, plot_data, color = plot_color, linestyle = plot_linestyle, marker = plot_marker, label = plot_label)
 
                 if np.max(plot_data) > ymax_left: ymax_left = np.max(plot_data)
                 if np.min(plot_data) < ymin_left: ymin_left = np.min(plot_data)
@@ -998,7 +998,7 @@ def daily_profiles(time, powers, plot_specs, fig_specs, **params):
 
         # x-axis
         ax[dd].set_xlabel(fig_specs['xaxis_label'], fontsize = fontsize_labels)
-        ax[dd].set_xlim([time[0], time[-1]])
+        ax[dd].set_xlim([time[0], time[-1] + dt])
         # Set one tick each hour on the x-axis
         ax[dd].xaxis.set_major_locator(plt.MaxNLocator(24))
         # ax[dd].set_xticks(list(time[: : int(60*ts/dt)]))

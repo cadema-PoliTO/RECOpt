@@ -437,10 +437,17 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
         except Exception: pass 
 
         # Creating a subfolder, if not already existing
-        subsubdirname = '{}_{}_{}_detailed_load_profiles'.format(location, en_class, n_hh)
+        subsubdirname = '{}_{}_{}'.format(location, en_class, n_hh)
 
         try: Path.mkdir(basepath / dirname / subdirname / subsubdirname)
         except Exception: pass
+
+        subsubsubdirname = 'detailed_load_profiles'
+
+        try: Path.mkdir(basepath / dirname / subdirname / subsubdirname / subsubsubdirname)
+        except Exception: pass
+
+        fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
 
 
         ## Running through the seasons and the day-types
@@ -456,7 +463,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
                 # Saving the total, average, maximum, medium, minimum (i.e. quantile) load profiles in a .csv file
                 # filename = '{}_{}_{}_{}_{}_lps_aggr.csv'.format(location, en_class, n_hh, season, day_nickname)
                 filename = '{}_{}_lps_aggr.csv'.format(season, day_nickname)
-                fpath = basepath / dirname / subdirname / subsubdirname
+                # fpath = basepath / dirname / subdirname / subsubdirname
                     
                 with open(fpath / filename, mode = 'w', newline = '') as csv_file:
                     csv_writer = csv.writer(csv_file, delimiter = ';', quotechar = "'", quoting = csv.QUOTE_NONNUMERIC)
@@ -468,7 +475,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
                 # Saving the random sample load profiles in a file, after giving a different time-step
                 # filename = '{}_{}_{}_{}_{}_lps_sample.csv'.format(location, en_class, n_hh, season, day_nickname)
                 filename = '{}_{}_lps_sample.csv'.format(season, day_nickname)
-                fpath = basepath / dirname / subdirname / subsubdirname
+                # fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
 
                 with open(fpath / filename, mode = 'w', newline = '') as csv_file:
                     csv_writer = csv.writer(csv_file, delimiter = ';', quotechar = "'", quoting = csv.QUOTE_NONNUMERIC)
@@ -480,7 +487,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
             # Saving the energy consumed by the appliances in each household, for each season
             # filename = '{}_{}_{}_{}_energy.csv'.format(location, en_class, n_hh, season)
             filename = '{}_energy.csv'.format(season)
-            fpath = basepath / dirname / subdirname / subsubdirname
+            # fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
             
             with open(fpath / filename, mode='w', newline='') as csv_file:
                 csv_writer = csv.writer(csv_file, delimiter=';', quotechar="'", quoting=csv.QUOTE_NONNUMERIC)
@@ -490,7 +497,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
                     csv_writer.writerow([app,apps_ID[app][1]]+list(energy_stor[ss, apps_ID[app][0], :]))   
 
 
-        message = '\nThe results have been saved in {}/{}/{} as .csv files.'.format(dirname, subdirname, subsubdirname)
+        message = '\nThe detailed results about load profiles have been saved in {} as .csv files.'.format(fpath)
         print(message) 
 
 
@@ -508,10 +515,17 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
         except Exception: pass
 
         # Creating a subfolder, if not already existing
-        subsubdirname = '{}_{}_{}_detailed_load_profiles'.format(location, en_class, n_hh)
+        subsubdirname = '{}_{}_{}'.format(location, en_class, n_hh)
 
         try: Path.mkdir(basepath / dirname / subdirname / subsubdirname)
         except Exception: pass
+
+        subsubsubdirname = 'detailed_load_profiles'
+
+        try: Path.mkdir(basepath / dirname / subdirname / subsubdirname / subsubsubdirname)
+        except Exception: pass
+
+        fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
 
 
         ## Running through the seasons and calling the methods in plot_generator to create figures to be saved
@@ -540,7 +554,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
             # filename = '{}_{}_{}_{}_aggr_loadprof.png'.format(location, en_class, season, n_hh)
             filename = '{}_aggr_loadprof.png'.format(season)
-            fpath = basepath / dirname / subdirname / subsubdirname
+            # fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
             
             fig.savefig(fpath / filename) 
             plt.close(fig)
@@ -572,7 +586,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
             # filename = '{}_{}_{}_{}_avg_quant_loadprof.png'.format(location, en_class, season, n_hh)
             filename = '{}_avg_quant_loadprof.png'.format(season)
-            fpath = basepath / dirname / subdirname / subsubdirname
+            # fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
             
             fig.savefig(fpath / filename)
             plt.close(fig)
@@ -597,7 +611,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
             # filename = '{}_{}_{}_{}_sample_loadprof.png'.format(location, en_class, season, n_hh)
             filename = '{}_sample_loadprof.png'.format(season)
-            fpath = basepath / dirname / subdirname / subsubdirname
+            # fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
             
             fig.savefig(fpath / filename)
             plt.close(fig)
@@ -614,7 +628,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
         # filename = '{}_{}_{}_season_tot_energy_apps.png'.format(location, en_class, n_hh)
         filename = 'season_tot_energy_apps.png'
-        fpath = basepath / dirname / subdirname / subsubdirname
+        # fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
 
         fig.savefig(fpath / filename)
         plt.close(fig)
@@ -632,7 +646,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
         # filename = '{}_{}_{}_year_tot_energy_apps.png'.format(location, en_class, n_hh)
         filename = 'year_tot_energy_apps.png'
-        fpath = basepath / dirname / subdirname / subsubdirname
+        # fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
 
         fig.savefig(fpath / filename)
         plt.close(fig)
@@ -652,7 +666,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
         # filename = '{}_{}_{}_year_avg_energy_apps.png'.format(location, en_class, n_hh)
         filename = 'year_avg_energy_apps.png'
-        fpath = basepath / dirname / subdirname / subsubdirname
+        # fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
 
         fig.savefig(fpath / filename)
         plt.close(fig)
@@ -689,13 +703,13 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
         # filename = '{}_{}_{}_season_perc_energy_apps.png'.format(location, en_class, n_hh)
         filename = 'season_perc_energy_apps.png'
-        fpath = basepath / dirname / subdirname / subsubdirname
+        # fpath = basepath / dirname / subdirname / subsubdirname / subsubsubdirname
 
         fig.savefig(fpath / filename)
         plt.close(fig)  
 
 
-        message = '\nThe figures have been saved in {}/{}/{}.'.format(dirname, subdirname, subsubdirname)
+        message = '\nThe detailed figures about load profiles have been saved in {}.'.format(fpath)
         print(message)        
         
 
