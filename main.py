@@ -609,7 +609,7 @@ print('\n{0:d} configuration(s) evaluated in {1:.3f} s.'.format(n_configurations
 
 # Header to be used in the tabulate in case of parametric analysis at least for one of the two technologies
 if fixed_analysis_flag != 1:
-    headers = ['PV size \n(kW)', 'Battery size \n(kWh)', 'Opt. did not work in', 'Opt. infeasible in', \
+    headers = ['PV size \n(kW)', 'Battery size \n(kWh)', 'Opt. did not work in\n*values fixed', 'Opt. infeasible in\n*minor issue', \
                 'ISS \n(%)', 'ISC \n(%)', 'Shared energy \n(kWh/year)', 'PV production \n(kWh/year)', 'Consumption \n(kWh/year)', \
                 'Grid feed \n(kWh)', 'Grid purchase \n(kWh)', 'Battery charge \n(kWh)', 'Battery discharge \n(kWh)']
 
@@ -816,13 +816,13 @@ if fixed_analysis_flag != 1:
 
         battery_index = battery_size_range.index(battery_size)
         plot_specs[battery_index] = {'plot_xvalues': isc_configurations[:, battery_index], 'plot_yvalues': iss_configurations[:, battery_index], \
-            'plot_yaxis': 'left', 'plot_label': 'Battery: {} kWh'.format(battery_size), 'plot_linestyle': '-', 'plot_marker': 's'}
+            'plot_yaxis': 'left', 'plot_label': 'Battery: {} kWh'.format(battery_size), 'plot_linestyle': '-', 'plot_marker': ''}
     
     for pv_size in pv_size_range:
 
         pv_index = pv_size_range.index(pv_size)
         plot_specs[pv_index + battery_index + 1] = {'plot_xvalues': isc_configurations[pv_index, :], 'plot_yvalues': iss_configurations[pv_index, :], \
-            'plot_yaxis': 'right', 'plot_label': 'PV: {} kW'.format(pv_size), 'plot_linestyle': '--', 'plot_marker': ''}
+            'plot_yaxis': 'right', 'plot_label': 'PV: {} kW'.format(pv_size), 'plot_linestyle': '--', 'plot_marker': 's'}
 
     fig = plot.parametric_chart(plot_specs, fig_specs)
 

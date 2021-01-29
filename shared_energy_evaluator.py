@@ -116,7 +116,7 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
     # Shared energy (according to the definition provided by the Decree Law 162/2019 - Milleproroghe) (kWh/month)
     shared_energy = np.zeros((n_months))
 
-    # In case of a fixed analysis, powers are stored for each typical day, in order to be plotted
+    # In case of a fixed-size analysis, powers are stored for each typical day, in order to be plotted
     # This is done only if the fixed_analysis_flag is active in order to not slow down the procedure
     # storing such files if they are not needed
     if fixed_analysis_flag == 1:
@@ -132,6 +132,12 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
 
     ## Performing the calculation for each month, for each day-type (i.e. for n_months*n_days = 24 typical days)
 
+    # Since the keys in days (dict) are strings, this for loop is used to store their names (they are needed in the following)
+    for day in days:
+        iday = days[day][0]
+        if iday == 0: weekday = day
+        elif iday == 1: weekend = day
+
     # Running through the months
     for month in months:
 
@@ -139,6 +145,15 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
 
         # Unique number used to identify the month in the arrays elements
         mm = months[month]['id'][0]
+
+        # In some cases the optimization method does not work properly and it is not able to perform the optimization.
+        # When this happen, battery_optimization returns nans. In order not to discard a typical day in which the energy
+        # values are nan from the total count, the energy is re-constructed using the adjacent typical day (same month)
+        # or the adjacent month.
+        # In more detail, if the energy values in a typical day are nan, an attempt is made to fill this values using
+        # the energy values in the other typical day from the same month. Since weekdays are evaluated first, if energy
+        # values for a weekday are nan, a flag is activated in order to fill them up at the next iteration (day type = weekend)
+        weekday_nan_flag = 0
 
         # Running through the day-types (weekday or weekend day)
         for day in days:
@@ -202,7 +217,6 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
             # battery_charge, battery_discharge, grid_feed, grid_purchase, battery_energy = \
             # np.asarray(battery_charge), np.asarray(battery_discharge), np.asarray(grid_feed), np.asarray(grid_purchase), np.asarray(battery_energy)
  
-
             # # Uncomment to check that the constraints and equations defined in the problem are actually respected
             # tol = 1e-4
             # if (np.any(net_load + grid_feed + battery_charge - pv_available - grid_purchase - battery_discharge > tol)): print('ops, node')
@@ -226,9 +240,60 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
             shared_energy[mm] += np.nansum(shared_power)*dt*number_of_days
 
 
-            # In case of a fixed analysis, powers are stored for each typical day, in order to be plotted
+            # In case nan are returned by battery_optimization, the contribution of the current typical day to the energy
+            # in the current month is null (due to np.nansum), therefore the value is to be fixed
+            if np.any(np.isnan(shared_power)): 
+
+                # print('{}, {} energy is nan'.format(month, day))
+                # print('Shared energy before fixing: {}'.format(shared_energy[mm]))
+
+                # If the day is weekday (that is evaluated first, for each month) it is needed to wait unitl the next
+                # iteration, therefore a flag is activated
+                if day == weekday:
+                    weekday_nan_flag = 1
+
+                # If the day is weekend day, the values can be fixed using the values from the weekday of the same month
+                elif day == weekend and weekday_nan_flag == 0:
+                    n_days_weekday = months[month]['days_distr'][weekday]
+                    grid_feed_energy[mm] += grid_feed_energy[mm]/n_days_weekday*number_of_days
+                    grid_purchase_energy[mm] += grid_purchase_energy[mm]/n_days_weekday*number_of_days
+                    battery_charge_energy[mm] += battery_charge_energy[mm]/n_days_weekday*number_of_days
+                    battery_discharge_energy[mm] += battery_discharge_energy[mm]/n_days_weekday*number_of_days
+                    shared_energy[mm] += shared_energy[mm]/n_days_weekday*number_of_days
+
+                    # print('Shared energy after fixing: {}'.format(shared_energy[mm]))
+
+                # If both the weekday and weekend day have retuned nan, the energy for the month is zero. Anyway
+                # it is set to nan in order to fix it at the end of the for loops, interpolating between adjacent months
+                elif day == weekend and weekday_nan_flag == 1:
+                    grid_feed_energy[mm] = np.nan
+                    grid_purchase_energy[mm] = np.nan
+                    battery_charge_energy[mm] = np.nan
+                    battery_discharge_energy[mm] = np.nan
+                    shared_energy[mm] = np.nan
+
+                    # print('Shared energy after fixing: {}'.format(shared_energy[mm]))
+        
+            # If the day is weekend and the flag from the previous weekday (same month) has been activated,
+            # the energy is fixed
+            elif day == weekend and weekday_nan_flag == 1 :
+
+                # print('Shared energy before fixing: {}'.format(shared_energy[mm]))
+
+                n_days_weekday = months[month]['days_distr'][weekday]
+                grid_feed_energy[mm] += grid_feed_energy[mm]/number_of_days*n_days_weekday
+                grid_purchase_energy[mm] += grid_purchase_energy[mm]/number_of_days*n_days_weekday
+                battery_charge_energy[mm] += battery_charge_energy[mm]/number_of_days*n_days_weekday
+                battery_discharge_energy[mm] += battery_discharge_energy[mm]/number_of_days*n_days_weekday
+                shared_energy[mm] += shared_energy[mm]/number_of_days*n_days_weekday
+
+                # print('Shared energy after fixing: {}'.format(shared_energy[mm]))
+
+            # In case of a fixed-size analysis, powers are stored for each typical day, in order to be plotted
             # This is done only if the fixed_analysis_flag is active in order to not slow down the procedure
             # storing such files if they are not needed
+            # Nota bene: fixed-size analysis means that both the pv and battery size are fixed (to one value)
+            # it has nothing to do with the fixing procedure operated for nan values
             if fixed_analysis_flag == 1:
 
                 pv_production_month_day[:, mm, dd] = pv_production
@@ -238,6 +303,27 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
                 battery_discharge_month_day[:, mm, dd] = battery_discharge
                 battery_energy_month_day[:, mm, dd] = battery_energy
                 shared_power_month_day[:, mm, dd] = shared_power
+
+
+    # If both the weekday and weekend returned nan values, the energy for the month has been set to nan
+    # Now it is fixed using the energy values from the adjacent months (interpolating the values)
+    if np.any(np.isnan(shared_energy)):
+
+        nans, fnan = np.isnan(grid_feed_energy), lambda z: z.nonzero()[0]
+        grid_feed_energy[nans]= np.interp(fnan(nans), fnan(~nans), grid_feed_energy[~nans], period = n_months)
+
+        nans, fnan = np.isnan(grid_purchase_energy), lambda z: z.nonzero()[0]
+        grid_purchase_energy[nans]= np.interp(fnan(nans), fnan(~nans), grid_purchase_energy[~nans], period = n_months)
+
+        nans, fnan = np.isnan(battery_charge_energy), lambda z: z.nonzero()[0]
+        battery_charge_energy[nans]= np.interp(fnan(nans), fnan(~nans), battery_charge_energy[~nans], period = n_months)
+
+        nans, fnan = np.isnan(battery_discharge_energy), lambda z: z.nonzero()[0]
+        battery_discharge_energy[nans]= np.interp(fnan(nans), fnan(~nans), battery_discharge_energy[~nans], period = n_months)
+
+        nans, fnan = np.isnan(shared_energy), lambda z: z.nonzero()[0]
+        shared_energy[nans]= np.interp(fnan(nans), fnan(~nans), shared_energy[~nans], period = n_months)
+
 
     results = {
         'optimization_status': optimization_status,

@@ -565,20 +565,239 @@ subsubdirname = '{}_{}_{}'.format('north', 'D', 10)
 
 # print(aa+ bb)
 
-size_min = 10
-size_max = 10
-n_sizes = 1
+# size_min = 10
+# size_max = 10
+# n_sizes = 1
 
-size_min = int(size_min*2)/2
-size_max = int(size_max*2)/2
-n_sizes = int(n_sizes)
+# size_min = int(size_min*2)/2
+# size_max = int(size_max*2)/2
+# n_sizes = int(n_sizes)
 
-size_range_length = max(size_max - size_min, 0.5)
+# size_range_length = max(size_max - size_min, 0.5)
 
-# if size_range_length/(n_sizes - 1) < 0.5: n_sizes = int(2*size_range_length + 1)
-n_sizes = min(n_sizes, int(2*size_range_length + 1))
-# print(size_range_length/(n_sizes - 1))
+# # if size_range_length/(n_sizes - 1) < 0.5: n_sizes = int(2*size_range_length + 1)
+# n_sizes = min(n_sizes, int(2*size_range_length + 1))
+# # print(size_range_length/(n_sizes - 1))
 
-size_range = np.linspace(size_min, size_max, n_sizes)
-size_range = [int(size*2)/2 for size in size_range]
-print(size_range)
+# size_range = np.linspace(size_min, size_max, n_sizes)
+# size_range = [int(size*2)/2 for size in size_range]
+# print(size_range)
+
+# energy_month = np.random.randint(100, size = (6, 2))
+
+# energy_month = np.array(energy_month, dtype = float)
+
+# energy_month[[3,4],0] = np.nan
+# energy_month[1,1] = np.nan
+
+# print(energy_month)
+# print(np.shape(energy_month))
+
+# if np.any(np.isnan(energy_month)):
+#     print('uuh')
+#     index = np.where(np.isnan(energy_month))
+#     print(index[0])
+#     print(energy_month[index[0]])
+#     print([np.isnan(energy_month)])
+
+
+# y = energy_month.copy()
+
+
+
+# nans, x = np.isnan(y), lambda z: z.nonzero()[0]
+
+
+# print(energy_month)
+# print(y)
+
+
+
+# print(nans)
+# print(x)
+
+# print(y[nans])
+# print(x(nans))
+# print(x(~nans))
+# print(y[~nans])
+
+# y[nans]= np.interp(x(nans), x(~nans), y[~nans])
+
+# plt.plot(y[:,0], 'b')
+# plt.plot(energy_month[:,0], 'r--')
+
+# plt.plot(y[:,1], 'c')
+# plt.plot(energy_month[:,1], 'm--')
+
+# plt.show()
+
+
+# y = energy_month.flatten()
+
+# print(y)
+
+# nans, x = np.isnan(y), lambda z: z.nonzero()[0]
+
+# y[nans]= np.interp(x(nans), x(~nans), y[~nans])
+
+# print(y)
+
+
+# energy_month = y.reshape(6,2)
+
+# print(energy_month)
+
+# energy_month = np.random.randint(100, size = (12, 2))
+# energy_month = np.array(energy_month, dtype = float)
+
+# energy_month[[1,2], 0] = np.nan
+# energy_month[[4,2], 1] = np.nan
+# print(energy_month)
+
+months = {
+    'january': {'id': (0, 'jan'), 'season': 'winter', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+    'february': {'id': (1, 'feb'), 'season': 'winter', 'days_distr': {'week-day': 20, 'weekend-day': 8}},
+    'march': {'id': (2, 'mar'), 'season': 'winter', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+    'april': {'id': (3, 'apr'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+    'may': {'id': (4, 'may'), 'season': 'spring', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+    'june': {'id': (5, 'jun'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+    'july': {'id': (6, 'jul'), 'season': 'summer', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+    'august': {'id': (7, 'aug'), 'season': 'summer', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+    'september': {'id': (8, 'sep'), 'season': 'summer', 'days_distr': {'week-day': 20, 'weekend-day': 10}},
+    'october': {'id': (9, 'oct'), 'season': 'autumn', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+    'november': {'id': (10, 'nov'), 'season': 'autumn', 'days_distr': {'week-day': 22, 'weekend-day': 8}},
+    'december': {'id': (11, 'dec'), 'season': 'autumn', 'days_distr': {'week-day': 21, 'weekend-day': 10}},
+    }
+
+days = {
+    'week-day': (0, 'wd'),
+    'weekend-day': (1, 'we')
+    }
+
+# energy_month = np.zeros((len(months)))
+
+# for month in months:
+#     imonth = months[month]['id'][0]
+
+#     weekday_nan_flag = 0
+
+#     for day in days:
+#         iday = days[day][0]
+#         if iday == 0: weekday = day; #yesterday_days = months[month]['days_distr'][day]
+#         elif iday == 1: weekend = day; #tomorrow_days = months[month]['days_distr'][day]
+    
+#     # print(yesterday)
+#     # print(tomorrow)
+
+#     for day in days:
+#         iday = days[day][0]
+
+#         energy_this_day = np.random.randint(100)
+#         random_prob = np.random.randint(100)
+#         if random_prob > 80: energy_this_day = np.nan
+
+#         n_days_today = months[month]['days_distr'][day]
+
+#         if np.isnan(energy_this_day): #print('({},{}) is {}'.format(imonth, iday, energy_month[imonth][iday]))
+#             print('{}, {} energy is nan!'.format(month, day))
+            
+#             if day == weekend:
+#                 n_days_weekday = months[month]['days_distr'][weekday]
+#                 energy_this_day = energy_month[imonth]/n_days_weekday*n_days_today
+
+#             if day == weekday:
+#                 weekday_nan_flag = 1
+        
+#         elif day == weekend and weekday_nan_flag == 1 :
+
+#             # yesterday = days.keys()[days.values().index(0)] 
+#             n_days_weekday = months[month]['days_distr'][weekday]
+#             energy_month[imonth] = energy_this_day/n_days_today*n_days_weekday
+
+#         energy_month[imonth] += energy_this_day
+
+# print(energy_month.T)
+
+# if np.any(np.isnan(energy_month)):
+
+#     nans, fnan = np.isnan(energy_month), lambda z: z.nonzero()[0]
+#     energy_month[nans]= np.interp(fnan(nans), fnan(~nans), energy_month[~nans], period = np.size(energy_month))
+
+# print(energy_month.T)
+
+
+# energy_month = np.zeros((len(months)))
+
+# for month in months:
+#     imonth = months[month]['id'][0]
+
+#     weekday_nan_flag = 0
+
+#     for day in days:
+#         iday = days[day][0]
+#         if iday == 0: weekday = day; #yesterday_days = months[month]['days_distr'][day]
+#         elif iday == 1: weekend = day; #tomorrow_days = months[month]['days_distr'][day]
+    
+#     # print(yesterday)
+#     # print(tomorrow)
+
+#     for day in days:
+#         iday = days[day][0]
+
+#         power_this_day = np.random.randint(100, size = (24,))
+        
+#         random_prob = np.random.randint(100)
+#         if random_prob > 80: power_this_day = np.nan
+
+#         n_days_today = months[month]['days_distr'][day]
+#         energy_month[imonth] += np.nansum(power_this_day)*n_days_today
+
+#         # print('{}, {} energy is {}'.format(month, day, np.nansum(power_this_day)*n_days_today))
+    
+
+#         if np.any(np.isnan(power_this_day)): 
+
+#             print('{}, {} energy is nan'.format(month, day))
+            
+#             if day == weekday:
+#                 weekday_nan_flag = 1
+
+#             elif day == weekend and weekday_nan_flag == 0:
+#                 n_days_weekday = months[month]['days_distr'][weekday]
+#                 energy_month[imonth] += energy_month[imonth]/n_days_weekday*n_days_today
+
+#             elif day == weekend and weekday_nan_flag == 1:
+#                 energy_month[imonth] = np.nan
+
+        
+#         elif day == weekend and weekday_nan_flag == 1 :
+
+#             # yesterday = days.keys()[days.values().index(0)] 
+#             n_days_weekday = months[month]['days_distr'][weekday]
+#             energy_month[imonth] += energy_month[imonth]/n_days_today*n_days_weekday
+
+#         # print(energy_month[imonth])
+#         # energy_month[imonth] += energy_this_day
+
+# print(energy_month.T)
+
+# if np.any(np.isnan(energy_month)):
+
+#     nans, fnan = np.isnan(energy_month), lambda z: z.nonzero()[0]
+#     energy_month[nans]= np.interp(fnan(nans), fnan(~nans), energy_month[~nans], period = np.size(energy_month))
+
+# print(energy_month.T)
+
+
+aaa = np.zeros((15,))
+bbb = np.zeros((15,))
+ccc = np.zeros((15,))
+ddd = np.ones((15,))
+
+aaa[:] = np.nan
+# bbb[:] = np.nan
+# ccc[:] = np.nan
+# ddd[:] = np.nan
+
+eee = np.minimum(aaa + bbb, ccc + ddd)
+print(eee)
