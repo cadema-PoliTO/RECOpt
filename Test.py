@@ -654,25 +654,25 @@ subsubdirname = '{}_{}_{}'.format('north', 'D', 10)
 # energy_month[[4,2], 1] = np.nan
 # print(energy_month)
 
-months = {
-    'january': {'id': (0, 'jan'), 'season': 'winter', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
-    'february': {'id': (1, 'feb'), 'season': 'winter', 'days_distr': {'week-day': 20, 'weekend-day': 8}},
-    'march': {'id': (2, 'mar'), 'season': 'winter', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
-    'april': {'id': (3, 'apr'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
-    'may': {'id': (4, 'may'), 'season': 'spring', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
-    'june': {'id': (5, 'jun'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
-    'july': {'id': (6, 'jul'), 'season': 'summer', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
-    'august': {'id': (7, 'aug'), 'season': 'summer', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
-    'september': {'id': (8, 'sep'), 'season': 'summer', 'days_distr': {'week-day': 20, 'weekend-day': 10}},
-    'october': {'id': (9, 'oct'), 'season': 'autumn', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
-    'november': {'id': (10, 'nov'), 'season': 'autumn', 'days_distr': {'week-day': 22, 'weekend-day': 8}},
-    'december': {'id': (11, 'dec'), 'season': 'autumn', 'days_distr': {'week-day': 21, 'weekend-day': 10}},
-    }
+# months = {
+#     'january': {'id': (0, 'jan'), 'season': 'winter', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'february': {'id': (1, 'feb'), 'season': 'winter', 'days_distr': {'week-day': 20, 'weekend-day': 8}},
+#     'march': {'id': (2, 'mar'), 'season': 'winter', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+#     'april': {'id': (3, 'apr'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+#     'may': {'id': (4, 'may'), 'season': 'spring', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'june': {'id': (5, 'jun'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+#     'july': {'id': (6, 'jul'), 'season': 'summer', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+#     'august': {'id': (7, 'aug'), 'season': 'summer', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'september': {'id': (8, 'sep'), 'season': 'summer', 'days_distr': {'week-day': 20, 'weekend-day': 10}},
+#     'october': {'id': (9, 'oct'), 'season': 'autumn', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'november': {'id': (10, 'nov'), 'season': 'autumn', 'days_distr': {'week-day': 22, 'weekend-day': 8}},
+#     'december': {'id': (11, 'dec'), 'season': 'autumn', 'days_distr': {'week-day': 21, 'weekend-day': 10}},
+#     }
 
-days = {
-    'week-day': (0, 'wd'),
-    'weekend-day': (1, 'we')
-    }
+# days = {
+#     'week-day': (0, 'wd'),
+#     'weekend-day': (1, 'we')
+#     }
 
 # energy_month = np.zeros((len(months)))
 
@@ -789,15 +789,79 @@ days = {
 # print(energy_month.T)
 
 
-aaa = np.zeros((15,))
-bbb = np.zeros((15,))
-ccc = np.zeros((15,))
-ddd = np.ones((15,))
+# aaa = np.zeros((15,))
+# bbb = np.zeros((15,))
+# ccc = np.zeros((15,))
+# ddd = np.ones((15,))
 
-aaa[:] = np.nan
-# bbb[:] = np.nan
-# ccc[:] = np.nan
-# ddd[:] = np.nan
+# aaa[:] = np.nan
+# # bbb[:] = np.nan
+# # ccc[:] = np.nan
+# # ddd[:] = np.nan
 
-eee = np.minimum(aaa + bbb, ccc + ddd)
-print(eee)
+# eee = np.minimum(aaa + bbb, ccc + ddd)
+# print(eee)
+
+time_sim = np.arange(0, 1440, 1)
+
+data = datareader.read_general('avg_loadprof_wm_wd_sawp.csv', ';', 'Input')
+time_fq = data[:, 0]*60
+power_fq = data[:, 1]
+
+freq_dens = np.interp(time_sim, time_fq, power_fq, period = 1440)
+
+
+# ## Usage probability distributions
+
+# # Selecting a time instant from the usage's frquency distribution of the appliance. The latter
+# # is equal to the average daily load profile (a normalization is perfoemd since the latter is in W)
+# freq_dens = apps_avg_lps[app][(key_season, key_day)]
+
+# # Evaluating the cumulative frquency of appliance'usage in one day
+# # cumfreq = cum_freq(time_sim, freq_dens)
+cum_freq = cumtrapz(freq_dens, time_sim, initial = 0)
+cum_freq = cum_freq/np.max(cum_freq)
+
+frequencies = np.zeros((np.shape(time_sim)))
+
+for i in range(int(5e5)):
+    ## Switch-on instant
+    # Selecting a random istant in which the appliances starts working (according to the cumulative frequency) 
+    # and using its duty-cycle (uniform for those appliances which don't have a duty-cycle) to create the load profile
+
+    # Selecting a random instant when to make the appliance start its cycle, 
+    # according to the frequency density and the cumulative frequency
+    random_probability = np.random.rand()
+
+    # Evaluating a time instant at which the appliance starts its cycle through the cumulative frequency,
+    # extracting it from a probability distribution that follows the frequency density of the appliance's usage
+    switch_on_instant = time_sim[cum_freq >= random_probability][0]
+    switch_on_index = int(np.where(time_sim == switch_on_instant)[0])
+
+    frequencies[switch_on_index] += 1
+
+frequencies2 = np.zeros((np.shape(time_sim)))
+
+for i in range(int(1e3)):
+    ## Switch-on instant
+    # Selecting a random istant in which the appliances starts working (according to the cumulative frequency) 
+    # and using its duty-cycle (uniform for those appliances which don't have a duty-cycle) to create the load profile
+
+    # Selecting a random instant when to make the appliance start its cycle, 
+    # according to the frequency density and the cumulative frequency
+    random_probability = np.random.rand()
+
+    # Evaluating a time instant at which the appliance starts its cycle through the cumulative frequency,
+    # extracting it from a probability distribution that follows the frequency density of the appliance's usage
+    switch_on_instant = time_sim[cum_freq >= random_probability][0]
+    switch_on_index = int(np.where(time_sim == switch_on_instant)[0])
+
+    frequencies2[switch_on_index] += 1
+    
+# plt.plot(time_fq, power_fq/np.max(power_fq), 'b')
+plt.plot(time_sim, freq_dens/np.max(freq_dens), 'b', label ='frequency density')
+plt.plot(time_sim, frequencies/np.max(frequencies), 'm-.', label = '5e5 extractions')
+plt.bar(time_sim, frequencies2/np.max(frequencies2), color = 'k', width = 1, alpha = 0.5, label = '1e2 extractions')
+plt.legend(loc = 'upper right')
+plt.grid()
+plt.show()
