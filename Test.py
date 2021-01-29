@@ -5,6 +5,7 @@ import random
 from scipy.interpolate import interp1d
 from scipy.integrate import cumtrapz
 import matplotlib.pyplot as plt
+from load_profiler import load_profiler
 # from aggregate_load_profiler import aggregate_load_profiler as agr
 
 # # Specifying which quantities (load profiles) are going to be stored and plotted
@@ -451,6 +452,7 @@ import matplotlib.pyplot as plt
 # ymin_right, ymax_right = 0, 0
 
 
+###################################################################################################################### PALETTE COLORS
 # colors = [(230, 25, 75),
 #         (60, 180, 75),
 #         (255, 225, 25),
@@ -492,155 +494,7 @@ import matplotlib.pyplot as plt
 # plt.show()
 
 
-# from tictoc import tic, toc
-
-# tic()
-# k = 0
-# for i in range(int(1e6)):
-#     k += i
-#     k += i + 1
-
-# print('{}: {} s'.format(k, toc()))
-
-# tic()
-# k = 0
-# for i in range(int(1e6)):
-#     k += i
-    
-# for i in range(int(1e6)):
-#     k += i + 1
-
-# print('{}: {} s'.format(k, toc()))
-
-# aa = list(range(0, 10, 1))
-# bb = list(range(0, 2, 1))
-
-# print(aa)
-# print(bb)
-
-# aa, bb = bb, aa
-
-# print(aa)
-# print(bb)
-
-
-
-# Creating an /Output folder, if not already existing
-dirname = 'Output'
-
-# Creating an /Output/Files folder, if not already existing
-subdirname = 'Files'
-
-# Creating a subfolder, if not already existing
-subsubdirname = '{}_{}_{}'.format('north', 'D', 10)
-
-
-# try:
-
-#     data_wd = datareader.read_general('consumption_profiles_month_wd.csv', ';', '/'.join((dirname, subdirname, subsubdirname)))
-#     data_we = datareader.read_general('consumption_profiles_month_we.csv', ';', '/'.join((dirname, subdirname, subsubdirname)))
-
-
-#     consumption_month_wd = data_wd[:, 1:]
-#     consumption_month_we = data_we[:, 1:]
-
-#     consumption_month_day = np.stack((consumption_month_wd, consumption_month_we), axis = 2)
-#     print(np.shape(consumption_month_day))
-
-#     message = '\nSome load profiles have already been evaluated for the current configuration, do you want to use them?\
-#            \nPress \'enter\' to skip and re-evaluate the load profiles \
-#            \nEnter \'ok\' to use the available ones: '
-#     load_profiler_flag = input(message).strip('\'",._- ').lower()
-
-#     if load_profiler_flag == '': load_profiler_flag = 0
-#     else: load_profiler_flag = 1
-
-# except:
-#     message = '\nEvaluation of the load profiles for the aggregate of households.'
-#     print(message)
-
-# aa = [1]
-
-# bb = [2,3,6,78,900,4]
-
-# print(aa+ bb)
-
-# size_min = 10
-# size_max = 10
-# n_sizes = 1
-
-# size_min = int(size_min*2)/2
-# size_max = int(size_max*2)/2
-# n_sizes = int(n_sizes)
-
-# size_range_length = max(size_max - size_min, 0.5)
-
-# # if size_range_length/(n_sizes - 1) < 0.5: n_sizes = int(2*size_range_length + 1)
-# n_sizes = min(n_sizes, int(2*size_range_length + 1))
-# # print(size_range_length/(n_sizes - 1))
-
-# size_range = np.linspace(size_min, size_max, n_sizes)
-# size_range = [int(size*2)/2 for size in size_range]
-# print(size_range)
-
-# energy_month = np.random.randint(100, size = (6, 2))
-
-# energy_month = np.array(energy_month, dtype = float)
-
-# energy_month[[3,4],0] = np.nan
-# energy_month[1,1] = np.nan
-
-# print(energy_month)
-# print(np.shape(energy_month))
-
-# if np.any(np.isnan(energy_month)):
-#     print('uuh')
-#     index = np.where(np.isnan(energy_month))
-#     print(index[0])
-#     print(energy_month[index[0]])
-#     print([np.isnan(energy_month)])
-
-
-# y = energy_month.copy()
-
-
-
-# nans, x = np.isnan(y), lambda z: z.nonzero()[0]
-
-
-# print(energy_month)
-# print(y)
-
-
-
-# print(nans)
-# print(x)
-
-# print(y[nans])
-# print(x(nans))
-# print(x(~nans))
-# print(y[~nans])
-
-# y[nans]= np.interp(x(nans), x(~nans), y[~nans])
-
-# plt.plot(y[:,0], 'b')
-# plt.plot(energy_month[:,0], 'r--')
-
-# plt.plot(y[:,1], 'c')
-# plt.plot(energy_month[:,1], 'm--')
-
-# plt.show()
-
-
-# y = energy_month.flatten()
-
-# print(y)
-
-# nans, x = np.isnan(y), lambda z: z.nonzero()[0]
-
-# y[nans]= np.interp(x(nans), x(~nans), y[~nans])
-
-# print(y)
+############################################################################################################################################### DATA FIX NAN
 
 
 # energy_month = y.reshape(6,2)
@@ -789,79 +643,229 @@ subsubdirname = '{}_{}_{}'.format('north', 'D', 10)
 # print(energy_month.T)
 
 
-# aaa = np.zeros((15,))
-# bbb = np.zeros((15,))
-# ccc = np.zeros((15,))
-# ddd = np.ones((15,))
+##########################################################################################################################################FREQUENCY DENSITY AND RANDOM PROBABILIY
 
-# aaa[:] = np.nan
-# # bbb[:] = np.nan
-# # ccc[:] = np.nan
-# # ddd[:] = np.nan
+# time_sim = np.arange(0, 1440, 1)
 
-# eee = np.minimum(aaa + bbb, ccc + ddd)
-# print(eee)
+# data = datareader.read_general('avg_loadprof_wm_wd_sawp.csv', ';', 'Input')
+# time_fq = data[:, 0]*60
+# power_fq = data[:, 1]
 
-time_sim = np.arange(0, 1440, 1)
-
-data = datareader.read_general('avg_loadprof_wm_wd_sawp.csv', ';', 'Input')
-time_fq = data[:, 0]*60
-power_fq = data[:, 1]
-
-freq_dens = np.interp(time_sim, time_fq, power_fq, period = 1440)
+# freq_dens = np.interp(time_sim, time_fq, power_fq, period = 1440)
 
 
-# ## Usage probability distributions
+# # ## Usage probability distributions
 
-# # Selecting a time instant from the usage's frquency distribution of the appliance. The latter
-# # is equal to the average daily load profile (a normalization is perfoemd since the latter is in W)
-# freq_dens = apps_avg_lps[app][(key_season, key_day)]
+# # # Selecting a time instant from the usage's frquency distribution of the appliance. The latter
+# # # is equal to the average daily load profile (a normalization is perfoemd since the latter is in W)
+# # freq_dens = apps_avg_lps[app][(key_season, key_day)]
 
-# # Evaluating the cumulative frquency of appliance'usage in one day
-# # cumfreq = cum_freq(time_sim, freq_dens)
-cum_freq = cumtrapz(freq_dens, time_sim, initial = 0)
-cum_freq = cum_freq/np.max(cum_freq)
+# # # Evaluating the cumulative frquency of appliance'usage in one day
+# # # cumfreq = cum_freq(time_sim, freq_dens)
+# cum_freq = cumtrapz(freq_dens, time_sim, initial = 0)
+# cum_freq = cum_freq/np.max(cum_freq)
 
-frequencies = np.zeros((np.shape(time_sim)))
+# frequencies = np.zeros((np.shape(time_sim)))
 
-for i in range(int(5e5)):
-    ## Switch-on instant
-    # Selecting a random istant in which the appliances starts working (according to the cumulative frequency) 
-    # and using its duty-cycle (uniform for those appliances which don't have a duty-cycle) to create the load profile
+# for i in range(int(5e5)):
+#     ## Switch-on instant
+#     # Selecting a random istant in which the appliances starts working (according to the cumulative frequency) 
+#     # and using its duty-cycle (uniform for those appliances which don't have a duty-cycle) to create the load profile
 
-    # Selecting a random instant when to make the appliance start its cycle, 
-    # according to the frequency density and the cumulative frequency
-    random_probability = np.random.rand()
+#     # Selecting a random instant when to make the appliance start its cycle, 
+#     # according to the frequency density and the cumulative frequency
+#     random_probability = np.random.rand()
 
-    # Evaluating a time instant at which the appliance starts its cycle through the cumulative frequency,
-    # extracting it from a probability distribution that follows the frequency density of the appliance's usage
-    switch_on_instant = time_sim[cum_freq >= random_probability][0]
-    switch_on_index = int(np.where(time_sim == switch_on_instant)[0])
+#     # Evaluating a time instant at which the appliance starts its cycle through the cumulative frequency,
+#     # extracting it from a probability distribution that follows the frequency density of the appliance's usage
+#     switch_on_instant = time_sim[cum_freq >= random_probability][0]
+#     switch_on_index = int(np.where(time_sim == switch_on_instant)[0])
 
-    frequencies[switch_on_index] += 1
+#     frequencies[switch_on_index] += 1
 
-frequencies2 = np.zeros((np.shape(time_sim)))
+# frequencies2 = np.zeros((np.shape(time_sim)))
 
-for i in range(int(1e3)):
-    ## Switch-on instant
-    # Selecting a random istant in which the appliances starts working (according to the cumulative frequency) 
-    # and using its duty-cycle (uniform for those appliances which don't have a duty-cycle) to create the load profile
+# for i in range(int(1e3)):
+#     ## Switch-on instant
+#     # Selecting a random istant in which the appliances starts working (according to the cumulative frequency) 
+#     # and using its duty-cycle (uniform for those appliances which don't have a duty-cycle) to create the load profile
 
-    # Selecting a random instant when to make the appliance start its cycle, 
-    # according to the frequency density and the cumulative frequency
-    random_probability = np.random.rand()
+#     # Selecting a random instant when to make the appliance start its cycle, 
+#     # according to the frequency density and the cumulative frequency
+#     random_probability = np.random.rand()
 
-    # Evaluating a time instant at which the appliance starts its cycle through the cumulative frequency,
-    # extracting it from a probability distribution that follows the frequency density of the appliance's usage
-    switch_on_instant = time_sim[cum_freq >= random_probability][0]
-    switch_on_index = int(np.where(time_sim == switch_on_instant)[0])
+#     # Evaluating a time instant at which the appliance starts its cycle through the cumulative frequency,
+#     # extracting it from a probability distribution that follows the frequency density of the appliance's usage
+#     switch_on_instant = time_sim[cum_freq >= random_probability][0]
+#     switch_on_index = int(np.where(time_sim == switch_on_instant)[0])
 
-    frequencies2[switch_on_index] += 1
+#     frequencies2[switch_on_index] += 1
     
-# plt.plot(time_fq, power_fq/np.max(power_fq), 'b')
-plt.plot(time_sim, freq_dens/np.max(freq_dens), 'b', label ='frequency density')
-plt.plot(time_sim, frequencies/np.max(frequencies), 'm-.', label = '5e5 extractions')
-plt.bar(time_sim, frequencies2/np.max(frequencies2), color = 'k', width = 1, alpha = 0.5, label = '1e2 extractions')
-plt.legend(loc = 'upper right')
-plt.grid()
+# # plt.plot(time_fq, power_fq/np.max(power_fq), 'b')
+# plt.plot(time_sim, freq_dens/np.max(freq_dens), 'b', label ='frequency density')
+# plt.plot(time_sim, frequencies/np.max(frequencies), 'm-.', label = '5e5 extractions')
+# plt.bar(time_sim, frequencies2/np.max(frequencies2), color = 'k', width = 1, alpha = 0.5, label = '1e2 extractions')
+# plt.legend(loc = 'upper right')
+# plt.grid()
+# plt.show()
+
+###################################################################################################################################################### HIGH NUMBER LOAD PROFILES
+
+# Time-step, total time and vector of time from 00:00 to 23:59 (one day) (min)
+dt = 1 
+time = 1440 
+time_sim = np.arange(0,time,dt) 
+
+# Creating a dictionary to be passed to the various methods, containing the time discretization
+time_dict = {
+    'time': time,
+    'dt': dt,
+    'time_sim': time_sim,
+    }
+
+# Uploading apps attributes 
+apps, apps_ID, apps_attr = datareader.read_appliances('eltdome_report.csv',';','Input')
+ec_yearly_energy, ec_levels_dict = datareader.read_enclasses('classenerg_report.csv',';','Input')
+coeff_matrix, seasons_dict = datareader.read_enclasses('coeff_matrix.csv',';','Input')
+
+apps_avg_lps = {}
+apps_dcs = {}
+for app in apps_ID:
+
+    # app_nickname is a 2 or 3 characters string identifying the appliance
+    app_nickname = apps_ID[app][apps_attr['nickname']] 
+
+    # app_type depends from the work cycle for the appliance: 'continuous'|'no_duty_cycle'|'duty_cycle'|
+    app_type = apps_ID[app][apps_attr['type']]
+
+    # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+    app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+
+    # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+    app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+
+    # Building the name of the file to be opened and read
+    fname_nickname = app_nickname
+    fname_type = 'avg_loadprof'
+
+    apps_avg_lps[app] = {}
+
+    for season in app_sbe:
+        fname_season = season
+
+        for day in app_wbe:
+            fname_day = day
+
+            filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
+            
+            # Reading the time and power vectors for the load profile
+            data_lp = datareader.read_general(filename,';','Input')
+
+            # Time is stored in hours and converted to minutes
+            time_lp = data_lp[:, 0] 
+            time_lp = time_lp*60 
+
+            # Power is already stored in Watts, it corresponds to the load profile
+            power_lp = data_lp[:, 1] 
+            load_profile = power_lp
+
+            # Interpolating the load profile if it has a different time-resolution
+            if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
+                    load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+
+            apps_avg_lps[app][(season, day)] = load_profile
+
+        
+    if app_type == 'duty_cycle':
+        fname_type = 'dutycycle'
+        filename = '{}_{}.csv'.format(fname_type, fname_nickname)
+        
+        # Reading the time and power vectors for the duty cycle 
+        data_dc = datareader.read_general(filename, ';', 'Input')
+
+        # Time is already stored in  minutes
+        time_dc = data_dc[:, 0] 
+
+        # Power is already stored in Watts, it corresponds to the duty cycle
+        power_dc = data_dc[:, 1] 
+        duty_cycle = power_dc
+        
+        # Interpolating the duty-cycle, if it has a different time resolution
+        if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
+                time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+                duty_cycle = np.interp(time_dc, power_dc)
+
+        apps_dcs[app] = {'time_dc': time_dc,
+                        'duty_cycle': duty_cycle}
+
+
+appliances_data = {
+    'apps': apps,
+    'apps_ID': apps_ID,
+    'apps_attr': apps_attr,
+    'ec_yearly_energy': ec_yearly_energy,
+    'ec_levels_dict': ec_levels_dict,
+    'coeff_matrix': coeff_matrix,
+    'seasons_dict': seasons_dict,
+    'apps_avg_lps': apps_avg_lps,
+    'apps_dcs': apps_dcs,
+    }
+
+params = {
+    'en_class': 'D',
+    'toll': 5,
+    'devsta': 0,
+    'ftg_avg': 100,
+}
+
+# # app = 'vacuum_cleaner'
+# # app = 'air_conditioner'
+# app = 'electric_oven'
+# # app = 'microwave_oven'
+# # app = 'fridge'
+# app = 'freezer'
+# app = 'washing_machine'
+# app = 'dish_washer'
+# # app = 'tumble_drier'
+# app = 'electric_boiler'
+# # app = 'hifi_stereo'
+# app = 'dvd_reader'
+app = 'tv'
+# # app = 'iron'
+# # app = 'pc'
+# # app = 'laptop'
+# # app = 'lighting'
+
+day = 'we'
+season = 's'
+
+# app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+
+# app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+
+key_season = 'sawp' 
+if len(app_sbe) > 1: key_season = season
+
+# Default choice (no different behaviour for different types of day):
+# if the appliance has got different profiles in different days of the week, this will be changed
+key_day = 'wde' 
+if len(app_wbe) > 1: key_day = day
+
+avg_load_profile = apps_avg_lps[app][(key_season, key_day)]
+
+app_ID = apps_ID[app][apps_attr['id_number']]
+T_on = apps[app_ID, apps_attr['time_on'] - (len(apps_attr) - np.size(apps, 1))]
+indices = int(T_on/2/dt)
+
+load_profile = np.zeros((np.size(time_sim)))
+
+for i in range(int(5e4)):
+    load_profile += load_profiler(time_dict, app, day, season, appliances_data, **params)
+
+plt.plot(time_sim, load_profile/np.max(load_profile), 'b', linewidth = 2)
+plt.bar(time_sim, avg_load_profile/np.max(avg_load_profile), width = dt, color = 'm', alpha = 0.5)
+plt.plot(time_sim, np.roll(load_profile/np.max(load_profile), -indices), 'r', linewidth = 1)
+# plt.ylim(0.65, 1.01)
 plt.show()
