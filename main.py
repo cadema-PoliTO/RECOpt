@@ -285,13 +285,20 @@ try:
 
     consumption_month_day = np.stack((consumption_month_wd, consumption_month_we), axis = 2)
 
-    message = '\nSome load profiles have already been evaluated for the current configuration, do you want to use them?\
-           \nPress \'enter\' to skip and re-evaluate the load profiles \
-           \nEnter \'ok\' to use the available ones: '
-    load_profiler_flag = input(message).strip('\'",._- ').lower()
+    # If the available load profiles have a different time step from the one selceted for the simulation, they are just disregarded
+    # (alternatively one could think to interpolate/aggregate the profile with the right time-step)
+    if np.size(consumption_month_day, axis = 0) != time_length:
+        load_profiler_flag = 1
 
-    if load_profiler_flag == '': load_profiler_flag = 1
-    else: load_profiler_flag = 0; print('\nThe available load profiles will be used.')
+    else:
+
+        message = '\nSome load profiles have already been evaluated for the current configuration, do you want to use them?\
+            \nPress \'enter\' to skip and re-evaluate the load profiles \
+            \nEnter \'ok\' to use the available ones: '
+        load_profiler_flag = input(message).strip('\'",._- ').lower()
+
+        if load_profiler_flag == '': load_profiler_flag = 1
+        else: load_profiler_flag = 0; print('\nThe available load profiles will be used.')
 
 except:
     load_profiler_flag = 1

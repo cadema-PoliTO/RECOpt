@@ -10,7 +10,7 @@ Created on Wed Jan 27 08:51:11 2020
 
 import numpy as np
 from tabulate import tabulate
-from battery_optimization import battery_optimization
+from battery_optimization_copy import battery_optimization
 import matplotlib.pyplot as plt
 
 def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, auxiliary_dict, fixed_analysis_flag):
@@ -208,7 +208,7 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
 
             optimization_status[month][day], \
             grid_feed, grid_purchase, battery_charge, battery_discharge, battery_energy = \
-            battery_optimization(pv_available, net_load, time_dict, technologies_dict)
+            battery_optimization(pv_production, pv_available, net_load, time_dict, technologies_dict)
 
             # from pyxems13 import compute_cons
             # nettt_load = consumption - pv_production

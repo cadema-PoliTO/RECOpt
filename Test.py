@@ -5,6 +5,8 @@ import random
 from scipy.interpolate import interp1d
 from scipy.integrate import cumtrapz
 import matplotlib.pyplot as plt
+from load_profiler import load_profiler
+from load_profile_aggregator_trapz import aggregator
 # from aggregate_load_profiler import aggregate_load_profiler as agr
 
 # # Specifying which quantities (load profiles) are going to be stored and plotted
@@ -654,25 +656,25 @@ subsubdirname = '{}_{}_{}'.format('north', 'D', 10)
 # energy_month[[4,2], 1] = np.nan
 # print(energy_month)
 
-months = {
-    'january': {'id': (0, 'jan'), 'season': 'winter', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
-    'february': {'id': (1, 'feb'), 'season': 'winter', 'days_distr': {'week-day': 20, 'weekend-day': 8}},
-    'march': {'id': (2, 'mar'), 'season': 'winter', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
-    'april': {'id': (3, 'apr'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
-    'may': {'id': (4, 'may'), 'season': 'spring', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
-    'june': {'id': (5, 'jun'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
-    'july': {'id': (6, 'jul'), 'season': 'summer', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
-    'august': {'id': (7, 'aug'), 'season': 'summer', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
-    'september': {'id': (8, 'sep'), 'season': 'summer', 'days_distr': {'week-day': 20, 'weekend-day': 10}},
-    'october': {'id': (9, 'oct'), 'season': 'autumn', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
-    'november': {'id': (10, 'nov'), 'season': 'autumn', 'days_distr': {'week-day': 22, 'weekend-day': 8}},
-    'december': {'id': (11, 'dec'), 'season': 'autumn', 'days_distr': {'week-day': 21, 'weekend-day': 10}},
-    }
+# months = {
+#     'january': {'id': (0, 'jan'), 'season': 'winter', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'february': {'id': (1, 'feb'), 'season': 'winter', 'days_distr': {'week-day': 20, 'weekend-day': 8}},
+#     'march': {'id': (2, 'mar'), 'season': 'winter', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+#     'april': {'id': (3, 'apr'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+#     'may': {'id': (4, 'may'), 'season': 'spring', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'june': {'id': (5, 'jun'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+#     'july': {'id': (6, 'jul'), 'season': 'summer', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+#     'august': {'id': (7, 'aug'), 'season': 'summer', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'september': {'id': (8, 'sep'), 'season': 'summer', 'days_distr': {'week-day': 20, 'weekend-day': 10}},
+#     'october': {'id': (9, 'oct'), 'season': 'autumn', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'november': {'id': (10, 'nov'), 'season': 'autumn', 'days_distr': {'week-day': 22, 'weekend-day': 8}},
+#     'december': {'id': (11, 'dec'), 'season': 'autumn', 'days_distr': {'week-day': 21, 'weekend-day': 10}},
+#     }
 
-days = {
-    'week-day': (0, 'wd'),
-    'weekend-day': (1, 'we')
-    }
+# days = {
+#     'week-day': (0, 'wd'),
+#     'weekend-day': (1, 'we')
+#     }
 
 # energy_month = np.zeros((len(months)))
 
@@ -789,15 +791,427 @@ days = {
 # print(energy_month.T)
 
 
-aaa = np.zeros((15,))
-bbb = np.zeros((15,))
-ccc = np.zeros((15,))
-ddd = np.ones((15,))
+# aaa = np.zeros((15,))
+# bbb = np.zeros((15,))
+# ccc = np.zeros((15,))
+# ddd = np.ones((15,))
 
-aaa[:] = np.nan
-# bbb[:] = np.nan
-# ccc[:] = np.nan
-# ddd[:] = np.nan
+# aaa[:] = np.nan
+# # bbb[:] = np.nan
+# # ccc[:] = np.nan
+# # ddd[:] = np.nan
 
-eee = np.minimum(aaa + bbb, ccc + ddd)
-print(eee)
+# eee = np.minimum(aaa + bbb, ccc + ddd)
+# print(eee)
+
+###################################################################################################################################################### HIGH NUMBER LOAD PROFILES
+
+# Time-step, total time and vector of time from 00:00 to 23:59 (one day) (min)
+dt = 1 
+time = 1440 
+time_sim = np.arange(0,time,dt) 
+
+# Creating a dictionary to be passed to the various methods, containing the time discretization
+time_dict = {
+    'time': time,
+    'dt': dt,
+    'time_sim': time_sim,
+    }
+
+# Uploading apps attributes 
+apps, apps_ID, apps_attr = datareader.read_appliances('eltdome_report.csv',';','Input')
+ec_yearly_energy, ec_levels_dict = datareader.read_enclasses('classenerg_report.csv',';','Input')
+coeff_matrix, seasons_dict = datareader.read_enclasses('coeff_matrix.csv',';','Input')
+
+apps_avg_lps = {}
+apps_dcs = {}
+for app in apps_ID:
+
+    # app_nickname is a 2 or 3 characters string identifying the appliance
+    app_nickname = apps_ID[app][apps_attr['nickname']] 
+
+    # app_type depends from the work cycle for the appliance: 'continuous'|'no_duty_cycle'|'duty_cycle'|
+    app_type = apps_ID[app][apps_attr['type']]
+
+    # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+    app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+
+    # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+    app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+
+    # Building the name of the file to be opened and read
+    fname_nickname = app_nickname
+    fname_type = 'avg_loadprof'
+
+    apps_avg_lps[app] = {}
+
+    for season in app_sbe:
+        fname_season = season
+
+        for day in app_wbe:
+            fname_day = day
+
+            filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
+            
+            # Reading the time and power vectors for the load profile
+            data_lp = datareader.read_general(filename,';','Input')
+
+            # Time is stored in hours and converted to minutes
+            time_lp = data_lp[:, 0] 
+            time_lp = time_lp*60 
+
+            # Power is already stored in Watts, it corresponds to the load profile
+            power_lp = data_lp[:, 1] 
+            load_profile = power_lp
+
+            # Interpolating the load profile if it has a different time-resolution
+            if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
+                    load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+
+            apps_avg_lps[app][(season, day)] = load_profile
+
+        
+    if app_type == 'duty_cycle':
+        fname_type = 'dutycycle'
+        filename = '{}_{}.csv'.format(fname_type, fname_nickname)
+        
+        # Reading the time and power vectors for the duty cycle 
+        data_dc = datareader.read_general(filename, ';', 'Input')
+
+        # Time is already stored in  minutes
+        time_dc = data_dc[:, 0] 
+
+        # Power is already stored in Watts, it corresponds to the duty cycle
+        power_dc = data_dc[:, 1] 
+        duty_cycle = power_dc
+        
+        # Interpolating the duty-cycle, if it has a different time resolution
+        if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
+                time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+                duty_cycle = np.interp(time_dc, power_dc)
+
+        apps_dcs[app] = {'time_dc': time_dc,
+                        'duty_cycle': duty_cycle}
+
+
+appliances_data = {
+    'apps': apps,
+    'apps_ID': apps_ID,
+    'apps_attr': apps_attr,
+    'ec_yearly_energy': ec_yearly_energy,
+    'ec_levels_dict': ec_levels_dict,
+    'coeff_matrix': coeff_matrix,
+    'seasons_dict': seasons_dict,
+    'apps_avg_lps': apps_avg_lps,
+    'apps_dcs': apps_dcs,
+    }
+
+params = {
+    'en_class': 'D',
+    'toll': 5,
+    'devsta': 0,
+    'ftg_avg': 100,
+}
+
+# # app = 'vacuum_cleaner'
+# # app = 'air_conditioner'
+# app = 'electric_oven'
+# # app = 'microwave_oven'
+# # app = 'fridge'
+# app = 'freezer'
+# app = 'washing_machine'
+app = 'dish_washer'
+# # app = 'tumble_drier'
+# app = 'electric_boiler'
+# # app = 'hifi_stereo'
+# app = 'dvd_reader'
+# app = 'tv'
+# # app = 'iron'
+# # app = 'pc'
+# # app = 'laptop'
+# # app = 'lighting'
+
+day = 'we'
+season = 's'
+
+# app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+
+# app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+
+key_season = 'sawp' 
+if len(app_sbe) > 1: key_season = season
+
+# Default choice (no different behaviour for different types of day):
+# if the appliance has got different profiles in different days of the week, this will be changed
+key_day = 'wde' 
+if len(app_wbe) > 1: key_day = day
+
+avg_load_profile = apps_avg_lps[app][(key_season, key_day)]
+
+app_ID = apps_ID[app][apps_attr['id_number']]
+T_on = apps[app_ID, apps_attr['time_on'] - (len(apps_attr) - np.size(apps, 1))]
+indices = int(T_on/2/dt)
+
+load_profile = np.zeros((np.size(time_sim)))
+
+for i in range(int(5e4)):
+    load_profile += load_profiler(time_dict, app, day, season, appliances_data, **params)
+
+plt.plot(time_sim, load_profile/np.max(load_profile), 'b', linewidth = 2)
+plt.bar(time_sim, avg_load_profile/np.max(avg_load_profile), width = dt, color = 'm', alpha = 0.5)
+plt.plot(time_sim, np.roll(load_profile/np.max(load_profile), +indices), 'r', linewidth = 1)
+# plt.ylim(0.65, 1.01)
+plt.show()
+
+
+
+################################################################################################################################################### Interpolation/aggregtion
+
+# dt = 1
+# time = 24
+# time_sim = np.arange(0, time, dt)
+# # power = np.random.randint(100, size = (100,))
+
+
+
+# mm = 7
+
+# data_pv = datareader.read_general('pv_production_unit.csv', ';', 'Input')
+# time_pv = data_pv[:, 0]
+# pv_production_unit = data_pv[:, 1:]
+
+# pv_size = 12
+
+# pv_production = pv_production_unit[:, mm]*pv_size
+
+# location = 'north'
+# en_class = 'A+'
+# n_hh = 12
+
+# # Checking if there is already a file where the load profiles for this configuration have been stored
+# dirname = 'Output'
+# subdirname = 'Files'
+# subsubdirname = '{}_{}_{}'.format(location, en_class, n_hh)
+
+# data_wd = datareader.read_general('consumption_profiles_month_wd.csv', ';', '/'.join((dirname, subdirname, subsubdirname)))
+# # data_we = datareader.read_general('consumption_profiles_month_we.csv', ';', '/'.join((dirname, subdirname, subsubdirname)))
+# consumption_month_wd = data_wd[:, 1:]
+# # consumption_month_we = data_we[:, 1:]
+
+# consumption = consumption_month_wd[:, mm]
+
+# consumption_shared = np.random.rand(np.size(time_sim))*(np.max(consumption)/10)*0
+
+# plt.figure()
+# plt.plot(time_sim, pv_production)
+# plt.plot(time_sim, consumption)
+# plt.plot(time_sim, consumption_shared)
+# plt.show()
+
+# net_production = pv_production - consumption_shared
+# net_production[net_production < 0] = 0
+
+# power_available = net_production - consumption
+# power_available[power_available < 0] = 0
+
+# net_load = consumption + consumption_shared - pv_production
+
+
+# power_available2 = pv_production - (consumption_shared + consumption)
+# power_available2[power_available2 < 0] = 0
+# # print(power_available[power_available > 0])
+# # print(-net_load[power_available > 0])
+
+
+# plt.figure()
+# # plt.plot(time_sim + dt/2, pv_production, 'bs-', label = 'production')
+# # plt.plot(time_sim + dt/2, consumption + consumption_shared, 'gs-', 'consumption')
+# plt.plot(time_sim + dt/2, net_production, 'bd--', label = 'net_production')
+# plt.plot(time_sim + dt/2, power_available, 'rd--', label = 'power available')
+# plt.plot(time_sim + dt/2, power_available2, 'rs-.', label = 'power_available2')
+# plt.plot(time_sim + dt/2, net_load, 'gd-.', label = 'net_load')
+# plt.legend()
+# plt.show()
+
+
+
+
+
+# dt_aggr = 1
+# time_aggr = np.arange(0, time, dt_aggr)
+# power_intp = np.interp(time_aggr, time_sim, power, period = time)
+# # power_aggr = aggregator({'dt': dt, 'time': time, 'time_sim': time_sim}, power, dt_aggr)
+
+
+
+
+# plt.bar(time_sim, power, color = 'b', align = 'edge', alpha = 0.5, width = dt)
+# plt.bar(time_aggr, power_intp, color = 'r', align = 'edge', alpha = 0.5, width = dt_aggr)
+# # plt.bar(time_aggr, power_aggr, align = 'edge', color = 'm', alpha = 0.5, width = dt_aggr)
+
+# print(np.trapz(np.append(power, power[0]), np.append(time_sim, time)))
+# print(np.sum(power_intp)*dt_aggr)
+# # print(np.sum(power_aggr)*dt_aggr)
+
+# plt.show()
+
+
+
+
+##################################################################################################################################################
+
+# location = 'north'
+# n_hh = 12
+# en_class = 'A+'
+
+
+
+# seasons = {
+#     'winter': (0, 'w'),
+#     'spring': (1, 'ap'),
+#     'summer': (2, 's'),
+#     'autumn': (3, 'ap')
+#     }
+
+# days = {
+#     'week-day': (0, 'wd'),
+#     'weekend-day': (1, 'we')
+#     }
+
+# # While the routine that evaluates the load profiles works with typical profiles for each season, 
+# # the optimization procedure works with tyipcal profiles for each month.  
+# # A reference year is considered, in which the first day (01/01) is a monday. 
+# # Therefore, conventionally considering that winter lasts from january to march 
+# # spring from april to june, summer from july to september and autumn from october
+# # to december, each month has got the following number of weekdays and weekend days.
+
+# # Creating a dictionary for the months
+# months = {
+#     'january': {'id': (0, 'jan'), 'season': 'winter', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'february': {'id': (1, 'feb'), 'season': 'winter', 'days_distr': {'week-day': 20, 'weekend-day': 8}},
+#     'march': {'id': (2, 'mar'), 'season': 'winter', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+#     'april': {'id': (3, 'apr'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+#     'may': {'id': (4, 'may'), 'season': 'spring', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'june': {'id': (5, 'jun'), 'season': 'spring', 'days_distr': {'week-day': 21, 'weekend-day': 9}},
+#     'july': {'id': (6, 'jul'), 'season': 'summer', 'days_distr': {'week-day': 22, 'weekend-day': 9}},
+#     'august': {'id': (7, 'aug'), 'season': 'summer', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'september': {'id': (8, 'sep'), 'season': 'summer', 'days_distr': {'week-day': 20, 'weekend-day': 10}},
+#     'october': {'id': (9, 'oct'), 'season': 'autumn', 'days_distr': {'week-day': 23, 'weekend-day': 8}},
+#     'november': {'id': (10, 'nov'), 'season': 'autumn', 'days_distr': {'week-day': 22, 'weekend-day': 8}},
+#     'december': {'id': (11, 'dec'), 'season': 'autumn', 'days_distr': {'week-day': 21, 'weekend-day': 10}},
+#     }
+
+# # The days distribution in the seasons can be evaluated as well
+# days_distr = {}
+# for month in months:
+#         season = months[month]['season']
+        
+#         if season not in days_distr: days_distr[season] = {'week-day': months[month]['days_distr']['week-day'],
+#                                                            'weekend-day': months[month]['days_distr']['weekend-day']}
+
+#         else: 
+#                 days_distr[season]['week-day'] += months[month]['days_distr']['week-day']
+#                 days_distr[season]['weekend-day'] += months[month]['days_distr']['weekend-day']
+
+# # Storing some useful quantities
+# n_months = len(months)
+# n_seasons = len(seasons)
+# n_days = len(days)
+
+# # Creating two lists to properly slice the consumption data when interpolating from seasonal to monthly values
+# months_slice = np.arange(0, n_months)
+# seasons_slice = np.arange(0, n_months, int(n_months/n_seasons))
+
+# # Storing all these dictionaries in a new dict that is passed to the various methods
+# auxiliary_dict = {
+#     'seasons': seasons,
+#     'n_seasons': n_seasons,
+#     'months': months,
+#     'n_months': n_months,
+#     'days': days,
+#     'n_days': n_days,
+#     'days_distr': days_distr,
+#     }
+
+
+
+
+# ## Time discretization
+# # Time is discretized in steps of one hour (according to the definition of shared energy in the Decree Law 162/2019 - "Mille proroghe")
+
+# # Total time of simulation (h) - for each typical day
+# time = 24
+
+# # Timestep for the simulation (h) (the keyboard input dt_aggr is given in minutes)
+# dt = dt_aggr/60
+
+# # Vector of time, from 00:00 to 23:59, i.e. 24 h
+# time_sim = np.arange(0, time, dt)
+# time_length = np.size(time_sim)
+
+# # Storing all the elements needed for the time-discretization in a dictionary that is passed to the various methods
+# time_dict = {
+#     'time': time,
+#     'dt': dt,
+#     'time_sim': time_sim,
+#     'time_length': time_length,
+#     }
+
+
+
+# ### Input data
+
+# # Maximum power from the grid (total for the aggregate of households) (kW)
+# grid_power_max = power_max*n_hh
+
+
+# ## Battery specification
+# # The battery specifications are stored in a file that can be read using the method read_param
+# # from the module datareader.py, that will return a dictionary
+
+# battery_specs = datareader.read_param('battery_specs.csv', ';', 'Input')
+
+# # Storing the information about the various technologies considered in a dictionary
+# # that is passed to the various methods
+# technologies_dict = {
+#     'grid_power_max': grid_power_max,
+#     'battery_specs': battery_specs,
+#     }
+
+
+# ## Unit production from the photovoltaic installation (kWh/h/kWp)
+# # The unit production during each hour (kWh/h/kWp) from the photovoltaic installation can 
+# # be read using the method read_general from the module datareader.py, that returns a 2d-array
+# # containing the time vector on the first columns and the unit production during each hour in each
+# # month in the other columns
+
+# data_pv = datareader.read_general('pv_production_unit.csv', ';', 'Input')
+
+# time_pv = data_pv[:, 0]
+# pv_production_unit = data_pv[:, 1:]
+
+
+
+
+
+
+
+# ## Consumption from the aggregate of households 
+
+# # Checking if there is already a file where the load profiles for this configuration have been stored
+# dirname = 'Output'
+# subdirname = 'Files'
+# subsubdirname = '{}_{}_{}'.format(location, en_class, n_hh)
+
+# # If the files exist, the user is asked if it is needed to re-evaluate the load profiles or the available ones can be used
+# try:
+
+#     data_wd = datareader.read_general('consumption_profiles_month_wd.csv', ';', '/'.join((dirname, subdirname, subsubdirname)))
+#     data_we = datareader.read_general('consumption_profiles_month_we.csv', ';', '/'.join((dirname, subdirname, subsubdirname)))
+
+#     consumption_month_wd = data_wd[:, 1:]
+#     consumption_month_we = data_we[:, 1:]
+
+#     consumption_month_day = np.stack((consumption_month_wd, consumption_month_we), axis = 2)
