@@ -7,7 +7,15 @@ from scipy.integrate import cumtrapz
 import matplotlib.pyplot as plt
 from load_profiler import load_profiler
 from load_profile_aggregator_trapz import aggregator
+from pathlib import Path
+import csv
+from tictoc import tic, toc
 # from aggregate_load_profiler import aggregate_load_profiler as agr
+
+
+# The base path is saved in the variable basepath, it is used to move among
+# directories to find the files that need to be read.
+basepath = Path(__file__).parent
 
 # # Specifying which quantities (load profiles) are going to be stored and plotted
 # load_profiles_types = {
@@ -806,164 +814,164 @@ subsubdirname = '{}_{}_{}'.format('north', 'D', 10)
 
 ###################################################################################################################################################### HIGH NUMBER LOAD PROFILES
 
-# Time-step, total time and vector of time from 00:00 to 23:59 (one day) (min)
-dt = 1 
-time = 1440 
-time_sim = np.arange(0,time,dt) 
+# # Time-step, total time and vector of time from 00:00 to 23:59 (one day) (min)
+# dt = 1 
+# time = 1440 
+# time_sim = np.arange(0,time,dt) 
 
-# Creating a dictionary to be passed to the various methods, containing the time discretization
-time_dict = {
-    'time': time,
-    'dt': dt,
-    'time_sim': time_sim,
-    }
+# # Creating a dictionary to be passed to the various methods, containing the time discretization
+# time_dict = {
+#     'time': time,
+#     'dt': dt,
+#     'time_sim': time_sim,
+#     }
 
-# Uploading apps attributes 
-apps, apps_ID, apps_attr = datareader.read_appliances('eltdome_report.csv',';','Input')
-ec_yearly_energy, ec_levels_dict = datareader.read_enclasses('classenerg_report.csv',';','Input')
-coeff_matrix, seasons_dict = datareader.read_enclasses('coeff_matrix.csv',';','Input')
+# # Uploading apps attributes 
+# apps, apps_ID, apps_attr = datareader.read_appliances('eltdome_report.csv',';','Input')
+# ec_yearly_energy, ec_levels_dict = datareader.read_enclasses('classenerg_report.csv',';','Input')
+# coeff_matrix, seasons_dict = datareader.read_enclasses('coeff_matrix.csv',';','Input')
 
-apps_avg_lps = {}
-apps_dcs = {}
-for app in apps_ID:
+# apps_avg_lps = {}
+# apps_dcs = {}
+# for app in apps_ID:
 
-    # app_nickname is a 2 or 3 characters string identifying the appliance
-    app_nickname = apps_ID[app][apps_attr['nickname']] 
+#     # app_nickname is a 2 or 3 characters string identifying the appliance
+#     app_nickname = apps_ID[app][apps_attr['nickname']] 
 
-    # app_type depends from the work cycle for the appliance: 'continuous'|'no_duty_cycle'|'duty_cycle'|
-    app_type = apps_ID[app][apps_attr['type']]
+#     # app_type depends from the work cycle for the appliance: 'continuous'|'no_duty_cycle'|'duty_cycle'|
+#     app_type = apps_ID[app][apps_attr['type']]
 
-    # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
-    app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+#     # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+#     app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
 
-    # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
-    app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+#     # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+#     app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
 
-    # Building the name of the file to be opened and read
-    fname_nickname = app_nickname
-    fname_type = 'avg_loadprof'
+#     # Building the name of the file to be opened and read
+#     fname_nickname = app_nickname
+#     fname_type = 'avg_loadprof'
 
-    apps_avg_lps[app] = {}
+#     apps_avg_lps[app] = {}
 
-    for season in app_sbe:
-        fname_season = season
+#     for season in app_sbe:
+#         fname_season = season
 
-        for day in app_wbe:
-            fname_day = day
+#         for day in app_wbe:
+#             fname_day = day
 
-            filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
+#             filename = '{}_{}_{}_{}.csv'.format(fname_type, fname_nickname, fname_day, fname_season)
             
-            # Reading the time and power vectors for the load profile
-            data_lp = datareader.read_general(filename,';','Input')
+#             # Reading the time and power vectors for the load profile
+#             data_lp = datareader.read_general(filename,';','Input')
 
-            # Time is stored in hours and converted to minutes
-            time_lp = data_lp[:, 0] 
-            time_lp = time_lp*60 
+#             # Time is stored in hours and converted to minutes
+#             time_lp = data_lp[:, 0] 
+#             time_lp = time_lp*60 
 
-            # Power is already stored in Watts, it corresponds to the load profile
-            power_lp = data_lp[:, 1] 
-            load_profile = power_lp
+#             # Power is already stored in Watts, it corresponds to the load profile
+#             power_lp = data_lp[:, 1] 
+#             load_profile = power_lp
 
-            # Interpolating the load profile if it has a different time-resolution
-            if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
-                    load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
+#             # Interpolating the load profile if it has a different time-resolution
+#             if (time_lp[-1] - time_lp[0])/(np.size(time_lp) - 1) != dt: 
+#                     load_profile = np.interp(time_sim, time_lp, power_lp, period = time)
 
-            apps_avg_lps[app][(season, day)] = load_profile
+#             apps_avg_lps[app][(season, day)] = load_profile
 
         
-    if app_type == 'duty_cycle':
-        fname_type = 'dutycycle'
-        filename = '{}_{}.csv'.format(fname_type, fname_nickname)
+#     if app_type == 'duty_cycle':
+#         fname_type = 'dutycycle'
+#         filename = '{}_{}.csv'.format(fname_type, fname_nickname)
         
-        # Reading the time and power vectors for the duty cycle 
-        data_dc = datareader.read_general(filename, ';', 'Input')
+#         # Reading the time and power vectors for the duty cycle 
+#         data_dc = datareader.read_general(filename, ';', 'Input')
 
-        # Time is already stored in  minutes
-        time_dc = data_dc[:, 0] 
+#         # Time is already stored in  minutes
+#         time_dc = data_dc[:, 0] 
 
-        # Power is already stored in Watts, it corresponds to the duty cycle
-        power_dc = data_dc[:, 1] 
-        duty_cycle = power_dc
+#         # Power is already stored in Watts, it corresponds to the duty cycle
+#         power_dc = data_dc[:, 1] 
+#         duty_cycle = power_dc
         
-        # Interpolating the duty-cycle, if it has a different time resolution
-        if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
-                time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
-                duty_cycle = np.interp(time_dc, power_dc)
+#         # Interpolating the duty-cycle, if it has a different time resolution
+#         if (time_dc[-1] - time_dc[0])/(np.size(time_dc) - 1) != dt:
+#                 time_dc = np.arange(time_dc[0], time_dc[-1] + dt, dt)
+#                 duty_cycle = np.interp(time_dc, power_dc)
 
-        apps_dcs[app] = {'time_dc': time_dc,
-                        'duty_cycle': duty_cycle}
+#         apps_dcs[app] = {'time_dc': time_dc,
+#                         'duty_cycle': duty_cycle}
 
 
-appliances_data = {
-    'apps': apps,
-    'apps_ID': apps_ID,
-    'apps_attr': apps_attr,
-    'ec_yearly_energy': ec_yearly_energy,
-    'ec_levels_dict': ec_levels_dict,
-    'coeff_matrix': coeff_matrix,
-    'seasons_dict': seasons_dict,
-    'apps_avg_lps': apps_avg_lps,
-    'apps_dcs': apps_dcs,
-    }
+# appliances_data = {
+#     'apps': apps,
+#     'apps_ID': apps_ID,
+#     'apps_attr': apps_attr,
+#     'ec_yearly_energy': ec_yearly_energy,
+#     'ec_levels_dict': ec_levels_dict,
+#     'coeff_matrix': coeff_matrix,
+#     'seasons_dict': seasons_dict,
+#     'apps_avg_lps': apps_avg_lps,
+#     'apps_dcs': apps_dcs,
+#     }
 
-params = {
-    'en_class': 'D',
-    'toll': 5,
-    'devsta': 0,
-    'ftg_avg': 100,
-}
+# params = {
+#     'en_class': 'D',
+#     'toll': 5,
+#     'devsta': 0,
+#     'ftg_avg': 100,
+# }
 
-# # app = 'vacuum_cleaner'
-# # app = 'air_conditioner'
-# app = 'electric_oven'
-# # app = 'microwave_oven'
-# # app = 'fridge'
-# app = 'freezer'
-# app = 'washing_machine'
-app = 'dish_washer'
-# # app = 'tumble_drier'
-# app = 'electric_boiler'
-# # app = 'hifi_stereo'
-# app = 'dvd_reader'
-# app = 'tv'
-# # app = 'iron'
-# # app = 'pc'
-# # app = 'laptop'
-# # app = 'lighting'
+# # # app = 'vacuum_cleaner'
+# # # app = 'air_conditioner'
+# # app = 'electric_oven'
+# # # app = 'microwave_oven'
+# # # app = 'fridge'
+# # app = 'freezer'
+# # app = 'washing_machine'
+# app = 'dish_washer'
+# # # app = 'tumble_drier'
+# # app = 'electric_boiler'
+# # # app = 'hifi_stereo'
+# # app = 'dvd_reader'
+# # app = 'tv'
+# # # app = 'iron'
+# # # app = 'pc'
+# # # app = 'laptop'
+# # # app = 'lighting'
 
-day = 'we'
-season = 's'
+# day = 'we'
+# season = 's'
 
-# app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
-app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
+# # app_wbe (weekly behavior), different usage of the appliance in each type of days: 'wde'|'we','wd'
+# app_wbe = apps_ID[app][apps_attr['week_behaviour']] 
 
-# app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
-app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
+# # app_sbe (seasonal behavior), different usage of the appliance in each season: 'sawp'|'s','w','ap'
+# app_sbe = apps_ID[app][apps_attr['season_behaviour']] 
 
-key_season = 'sawp' 
-if len(app_sbe) > 1: key_season = season
+# key_season = 'sawp' 
+# if len(app_sbe) > 1: key_season = season
 
-# Default choice (no different behaviour for different types of day):
-# if the appliance has got different profiles in different days of the week, this will be changed
-key_day = 'wde' 
-if len(app_wbe) > 1: key_day = day
+# # Default choice (no different behaviour for different types of day):
+# # if the appliance has got different profiles in different days of the week, this will be changed
+# key_day = 'wde' 
+# if len(app_wbe) > 1: key_day = day
 
-avg_load_profile = apps_avg_lps[app][(key_season, key_day)]
+# avg_load_profile = apps_avg_lps[app][(key_season, key_day)]
 
-app_ID = apps_ID[app][apps_attr['id_number']]
-T_on = apps[app_ID, apps_attr['time_on'] - (len(apps_attr) - np.size(apps, 1))]
-indices = int(T_on/2/dt)
+# app_ID = apps_ID[app][apps_attr['id_number']]
+# T_on = apps[app_ID, apps_attr['time_on'] - (len(apps_attr) - np.size(apps, 1))]
+# indices = int(T_on/2/dt)
 
-load_profile = np.zeros((np.size(time_sim)))
+# load_profile = np.zeros((np.size(time_sim)))
 
-for i in range(int(5e4)):
-    load_profile += load_profiler(time_dict, app, day, season, appliances_data, **params)
+# for i in range(int(5e4)):
+#     load_profile += load_profiler(time_dict, app, day, season, appliances_data, **params)
 
-plt.plot(time_sim, load_profile/np.max(load_profile), 'b', linewidth = 2)
-plt.bar(time_sim, avg_load_profile/np.max(avg_load_profile), width = dt, color = 'm', alpha = 0.5)
-plt.plot(time_sim, np.roll(load_profile/np.max(load_profile), +indices), 'r', linewidth = 1)
-# plt.ylim(0.65, 1.01)
-plt.show()
+# plt.plot(time_sim, load_profile/np.max(load_profile), 'b', linewidth = 2)
+# plt.bar(time_sim, avg_load_profile/np.max(avg_load_profile), width = dt, color = 'm', alpha = 0.5)
+# plt.plot(time_sim, np.roll(load_profile/np.max(load_profile), +indices), 'r', linewidth = 1)
+# # plt.ylim(0.65, 1.01)
+# plt.show()
 
 
 
@@ -1215,3 +1223,117 @@ plt.show()
 #     consumption_month_we = data_we[:, 1:]
 
 #     consumption_month_day = np.stack((consumption_month_wd, consumption_month_we), axis = 2)
+
+
+
+
+######################################################################################################################################################### METHOD FOR READING PV DATA
+# filename = 'PVGIS_Data'
+# dirname = 'Input'
+# delimit = ','
+
+# dirname = dirname.strip()
+
+# filename = filename.strip()
+# if not filename.endswith('.csv'): filename = filename + '.csv'
+
+# fpath = basepath / dirname 
+
+# # month_list = []
+# # hour_list = []
+# # power_list = []
+
+# pv_production = np.zeros((24, 12))
+# pv_production_count_days = np.zeros((24, 12))
+
+# tic()
+
+# # try:
+# if True:
+#     with open(fpath / filename, mode = 'r') as csv_file:
+#         csv_reader = csv.reader(csv_file, delimiter = delimit)
+
+        
+#         row_before = []
+#         headers_flag = 1
+#         for row in csv_reader:
+
+            
+#             if not row == [] and row[0][0].isdigit():
+
+        
+#                 if headers_flag == 1:
+#                     headers = row_before
+#                     headers = [header.strip().lower().replace(' ', '_') for header in headers]
+#                     headers_flag = 0
+                    
+
+#                 time_row = row[headers.index('time')]
+#                 month = int(time_row[4:6]) - 1
+#                 hour = int(time_row[9:11])
+#                 power = float(row[headers.index('p')])/1000
+
+#                 pv_production[hour, month] += power
+#                 pv_production_count_days[hour, month] += 1
+#                 # date_list.append([time_row[0:4], time_row[4:6], time_row[6:8] , time_row[9:11]])
+#                 # month_list.append(time_row[4:6])
+#                 # hour_list.append(time_row[9:11])
+#                 # power_list.append(row[headers.index('p')])
+              
+            
+#             if headers_flag == 1: row_before = row 
+
+# # print(headers_flag)      
+# # except:
+    
+# #     print('Unable to open the file')
+# #     # print('Unable to open this file')
+
+# # print(date_list[100])
+# # print(date_list[200])
+
+# # print(power_list[100])
+# # print(power_list[200])
+# # Creating a 2D-array containing the data(time in the first column and power in the second one)
+# # month = np.array(month_list, dtype = int)
+# # hour = np.array(hour_list, dtype = int)
+# # power = np.array(power_list, dtype = float)
+
+# # print(type(date[0, 0]))
+# # print(type(date[0, -1]))
+# # print(type(power[0]))
+
+# # print(date[0, :])
+# # print(power[0])
+
+
+
+# pv_production = np.column_stack((np.arange(0, 24, 1), pv_production/pv_production_count_days))
+
+# print(toc())
+
+
+# # Storing the parameters (updated) in a .csv file
+# filename = 'pv_production_try2.csv'
+# fpath = basepath / dirname 
+# with open(fpath / filename , mode='w', newline='') as csv_file:
+#     csv_writer = csv.writer(csv_file, delimiter = ';', quotechar="'", quoting = csv.QUOTE_NONNUMERIC)
+
+#     csv_writer.writerow(['Time (h)'] + ['Month {} (W)'.format(i) for i in range(12)])
+
+#     for row in pv_production:
+#         csv_writer.writerow(row)
+
+
+# for i_month in range(np.size(pv_production, axis = 1)):
+#     print(i_month)
+
+#     for i_hour in range(np.size(pv_production, axis = 0)):
+#         print(i_hour)
+
+#         print(month[month == i_month])
+
+#         pv_production[hour, month] = np.average(power[np.all(month == i_month and hour == i_hour)])
+
+# # print(pv_production)
+
