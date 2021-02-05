@@ -1,5 +1,7 @@
 # EnergCommOptim
 
+## Energetic evaluation and optimization of energy community configurations
+
 The repository contains a routine that optimizes the operation of a PV system with energy storage for fixed or variable (parametric) sizes for both of them, in the context of collective self-consumption and energy communities in Italy. PV production data are to be provided by the user (PVGIS database can be used), while consumption profiles are generated for an aggregate of households using probabilistic methods.
 
 ## Requirements
@@ -44,6 +46,8 @@ These files don't need to be updated from the user.
 
 * `main.py`: this is the only file that should be directly used by the user. No manual modifications should be made, e.g. to change some parameters; the user just needs to make it run. Parameters are updated from keyboard and stored in Parameters/. Results, both _.csv_ files and _.png_ figures, are stored in Outputs/ for each in simulation, respectively, in Files/ and Figures/.
 
+* `pvgis_to_csv.py`: the module processes the data about hourly production from the PV, contained in a _.csv_ file downloaded from PVGIS. This module should be used from the user if the *'pv_production_unit.csv'* file is not directly provided.
+
 * `shared_energy_evaluator.py`: the module contains a method that evaluates the performance (shared energy, and other quantities) for a given configuration (number of households, size of the PV and battery systems) in one year, using a number of typical days (two for each month, both week-day and weekend-day). This module is not directly used by the user. 
 
 * `battery_optimization.py`: the module contains a method that optimizes the operation of the battery in one day, once that the production from the pv and the consumption from the households are given. At the moment, if the user wants to change the objective of the optimization, this should be done here, manually. This module is not directly used by the user. 
@@ -54,12 +58,18 @@ These files don't need to be updated from the user.
 
 * `load_profiler.py`: this module contains a method that computes the load profile for a single appliance in a given typical day. Normally the user does not need to use this module, but it can be used to test the generation of the load profile for a single appliance.
 
-* `plot_generator.py`: this module contains all the methods for the creation of the figures showing the results.
+* `load_profile_aggregator_trapz.py`: this module contains a method that aggregates some profiles using a different time-step. This module is not directly used by the user. 
+
+* `plot_generator.py`: this module contains all the methods for the creation of the figures showing the results. This module is not directly used by the user. 
 
 * `parameters_input.py`: this module contains the methods that are used in main for updating the paramters value to the user's keyboard input. The parameters are saved in Parameters/. This module is not directly used by the user. 
-
-* `tictoc.py`: this module contains two methods that are a Python adaptation of Matalab's tic-toc functions. This module is not directly used by the user. 
 
 * `levenshtein_distance.py`: this module contains a method that uses Levenshtein distance between two string to suggest the closest match to a word (user's input) and a list of words. This module is not directly used by the user. 
 
 * `datareader.py`: this module contains different methods that properly read the various input files. This module is not directely used by the user.
+
+* `tictoc.py`: this module contains two methods that are a Python adaptation of Matalab's tic-toc functions. This module is not directly used by the user. 
+
+
+
+
