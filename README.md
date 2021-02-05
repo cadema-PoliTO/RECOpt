@@ -39,35 +39,27 @@ These files don't need to be updated from the user.
 
 * Duty cycle files. They contain the time, with a resolution of 1 min, in the first columns and the power demand in Watt from the appliance in the second column. Their name is formatted as follows: `'dutycycle' + '_' + app_nickname + '.csv'`
 
-#### Parameters/
 
-This folder contains three .csv files where the parameters that are to be specified by the user for the simulation are stored.
+### Python files
 
-* *'parameters.csv'*: it contains the user-defined values for some parameters that control the simulation.
+* `main.py`: this is the only file that should be directly used by the user. No manual modifications should be made, e.g. to change some parameters; the user just needs to make it run. Parameters are updated from keyboard and stored in Parameters/. Results, both _.csv_ files and _.png_ figures, are stored in Outputs/ for each in simulation, respectively, in Files/ and Figures/.
 
-#### Python files
+* `shared_energy_evaluator.py`: the module contains a method that evaluates the performance (shared energy, and other quantities) for a given configuration (number of households, size of the PV and battery systems) in one year, using a number of typical days (two for each month, both week-day and weekend-day). This module is not directly used by the user. 
 
-* `aggregate_load_profiler_main.py`: this is the main. The load aggregated load profiles in the different seasons, and the energy consumptions over one year are computed and figures are generated. This is the only file that needs to be used directly by the user. The results are saved in Output/ (both files, in Files/, and figures in /Figures).
+* `battery_optimization.py`: the module contains a method that optimizes the operation of the battery in one day, once that the production from the pv and the consumption from the households are given. At the moment, if the user wants to change the objective of the optimization, this should be done here, manually. This module is not directly used by the user. 
+
+* `aggregate_load_profiler.py`: the module contains a method that generates the aggregated load profiles in different typical days (two for each season, both week-day and weekend-day) for a number of households. If the user chooses so when running the simulation, detailed files and figures about the load profiles and the energy consumption from the electric appliances are generated and saved in Output/. If the user wants to change some very specific parameters about the generation of the load profiles, this should be done here. Normally the user does not need to use this module, but it can be used to test the generation of the load profile for the aggregate of household.
+
+* `house_load_profiler.py`: this module contains a method that computes the load profile for a household in a given typical day. Normally the user does not need to use this module, but it can be used to test the generation of the load profile for a single household.
+
+* `load_profiler.py`: this module contains a method that computes the load profile for a single appliance in a given typical day. Normally the user does not need to use this module, but it can be used to test the generation of the load profile for a single appliance.
 
 * `plot_generator.py`: this module contains all the methods for the creation of the figures showing the results.
 
-* `parameters_input.py`: this module contains the method that is used in main for updating the paramters value to the user's keyboard input. This module is not directly used by the user. The parameters are saved in Parameters/.
+* `parameters_input.py`: this module contains the methods that are used in main for updating the paramters value to the user's keyboard input. The parameters are saved in Parameters/. This module is not directly used by the user. 
 
-* `house_load_profiler.py`: this module contains the method that computes the load profile for a household. This module can be used directly bu the user if the load profile for a single household is to be computed.
+* `tictoc.py`: this module contains two methods that are a Python adaptation of Matalab's tic-toc functions. This module is not directly used by the user. 
 
-* `load_profiler.py`: this module contains the method that computes the load profile for a single appliance. This module can be used directly by the user if the load profile for a single appliance is to be computed.
-
-* `cumulative_frequency.py`: this module contains a method to compute the cumulative frequency, starting from the frequency density. This module is not directely used by the user.
-
-* `profile_interpolation.py`: this module contains the method that interpolates a given time-profile in order to change the time resolution. This module is not directely used by the user.
-
-* `tictoc.py`: this module contains two methods that are a Python adaptation of Matalab's tic-toc functions.
-
-* `levenshtein_distance.py`: this module contains a method that uses Levenshtein distance between two string to suggest the closest match to a word (user's input) and a list of words.
+* `levenshtein_distance.py`: this module contains a method that uses Levenshtein distance between two string to suggest the closest match to a word (user's input) and a list of words. This module is not directly used by the user. 
 
 * `datareader.py`: this module contains different methods that properly read the various input files. This module is not directely used by the user.
-
-#### Output/
-
-This folder contains all the .csv files where the results from the various simulations are stored. The filename is formatted in order to give all the information needed about the location, season, day type of the simulation ,as well as the number of households considered and the energetic class of the appliances.
-The folder also contains the subfolders Files/ and Figures/.
