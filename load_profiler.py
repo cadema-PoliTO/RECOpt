@@ -264,7 +264,7 @@ def load_profiler(time_dict, app, day, season, appliances_data, **params):
     # extracting it from a probability distribution that follows the frequency density of the appliance's usage
     switch_on_instant = time_sim[cum_freq >= random_probability][0]
     switch_on_index = int(np.where(time_sim == switch_on_instant)[0]) 
-    
+    duration_index = int(T_on/2/dt)
 
     ## Building the load profile using the appliance's duty-cycle.
     # This is done by initializing a vector of zeros of the same length as time_sim
@@ -272,7 +272,7 @@ def load_profiler(time_dict, app, day, season, appliances_data, **params):
     # instant using np.roll
     load_profile = np.zeros(np.shape(time_sim))
     load_profile[:len(duty_cycle)] = duty_cycle
-    load_profile = np.roll(load_profile, switch_on_index)
+    load_profile = np.roll(load_profile, switch_on_index - duration_index)
 
     return (load_profile)
 

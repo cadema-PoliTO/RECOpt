@@ -4,4 +4,4 @@
 't_cd_min';3;(h)
 'eta_charge';0.98;(-)
 'eta_discharge';0.94;(-)
-'eta_self_discharge';0.999;(-)
+'eta_self_discharge';0.9995;(-)
