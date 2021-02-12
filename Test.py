@@ -1423,5 +1423,3 @@ plt.show()
 
 
 
-
->>>>>>> modifications

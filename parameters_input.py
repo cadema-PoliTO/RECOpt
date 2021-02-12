@@ -80,7 +80,7 @@ def parameters_input():
 
     # Creating a dictionary that contains all the parameters, their type, default values, etc.
     param_dict = {
-        'n_hh': {'type': int, 'default_val': 100, 'min_val': 1, 'max_val': 10000, 'uom': '(units)'},
+        'n_hh': {'type': int, 'default_val': 2, 'min_val': 1, 'max_val': 10000, 'uom': '(units)'},
         # 'toll': {'type': int, 'default_val': 15., 'min_val': 0., 'max_val': 100, 'uom': '(min)'},
         # 'devsta': {'type': int, 'default_val': 2, 'min_val': 1, 'max_val': 100, 'uom': '(min)'},
         # 'q_max': {'type': int, 'default_val': 85, 'min_val': 1, 'max_val': 100, 'uom': '(%)'},
@@ -288,16 +288,20 @@ def simulation_setup(tech):
     # Creating a dictionary that contains all the parameters, their type, default values, etc.
     param_dict = {
         'sim_type': {'type': str, 'default_val': 'fixed', 'possible_values': ['fixed', 'parametric'], 'uom': '(/)'},
-        'size': {'type': float, 'default_val': 0.5, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
-        'size_min': {'type': float, 'default_val': 0.5, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
-        'size_max': {'type': float, 'default_val': 1., 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
+        'size': {'type': float, 'default_val': 2, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
+        'size_min': {'type': float, 'default_val': 2, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
+        'size_max': {'type': float, 'default_val': 2., 'min_val': 0.5, 'max_val': 10000, 'uom': '(kW)'},
         'n_sizes': {'type': int, 'default_val': 1, 'min_val': 1, 'max_val': 5, 'uom': '(/)'}
         }
 
     if tech.strip("',.=\"_ ").lower().replace(' ', '_').replace('-', '_') == 'battery':
-        param_dict['size']['uom'] = 'kWh'
-        param_dict['size_min']['uom'] = 'kWh'
-        param_dict['size_max']['uom'] = 'kWh'
+        param_dict = {
+            'sim_type': {'type': str, 'default_val': 'parametric', 'possible_values': ['fixed', 'parametric'], 'uom': '(/)'},
+            'size': {'type': float, 'default_val': 2, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kWh)'},
+            'size_min': {'type': float, 'default_val': 1, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kWh)'},
+            'size_max': {'type': float, 'default_val': 5., 'min_val': 0.5, 'max_val': 10000, 'uom': '(kWh)'},
+            'n_sizes': {'type': int, 'default_val': 5, 'min_val': 1, 'max_val': 5, 'uom': '(/)'}
+            }
 
     # Adding a description to each parameter
     param_dict['sim_type']['description'] = 'Type of simulation for {}: \'fixed\' size or \'parametric\''.format(tech)
