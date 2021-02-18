@@ -5,15 +5,15 @@ from pulp import *
 ###############################################################################
 
 
-# This module contains the method that performs the optimization problem defining
+# This module contains the method that performs the optimisation problem defining
 # the operational strategy of the battery
 
 
 ###############################################################################
 
-def battery_optimization(pv_production, consumption, time_dict, technologies_dict):
+def battery_optimisation(pv_production, consumption, time_dict, technologies_dict):
     '''
-    The method optimizes the operation of the battery during one day.
+    The method optimises the operation of the battery during one day.
     Input:
         power_available: 1d-array, containing the value of the excess power at each time-step
         net_load: 1d-array, containing the value of the net load (consumption - production) at each time-step
@@ -21,7 +21,8 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
         technologies_dict: dict, containing all the information about the technologies involved (PV, battery, grid)
 
     Output:
-        optimization_status: str, showing the status of the optimization
+        optimisation_status: str, showing the status of the optimisation
+        shared_power: 1d-array, containing the value of the power that is shared at each timestep
         grid_feed: 1d-array, containing the excess power fed into the grid at each timestep
         grid_purchase: 1d-array, containing the deficit power purchased the grid at each timestep
         battery_charge: 1d-array, containing the excess power used to charge the battery at each timestep
@@ -94,15 +95,15 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
 
     # ## Easy solution
     #
-    # # If the available power from the PV is zero at all timesteps, no optimization is needed, since
-    # # all the consumption is satisfied purchasing energy from the grid. In such cases, the optimization 
+    # # If the available power from the PV is zero at all timesteps, no optimisation is needed, since
+    # # all the consumption is satisfied purchasing energy from the grid. In such cases, the optimisation 
     # # can just be skipped.
     #
     # # Defining a tolerance on the available power to be considered zero (since it is given in kW,
     # # a tolerance of 1e-4 is a tenth of a W)
     # tol = 1e-4
     # if np.all(power_available < 0 + tol):
-    #     # print('Optimization is avoided since there is no excess power from the PV')
+    #     # print('Optimisation is avoided since there is no excess power from the PV')
     #     problem_status = 'Opt. unnecessary'
     #     grid_feed = np.zeros((time_length,))
     #     grid_purchase = net_load
@@ -114,8 +115,8 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
 
 
 
-    ### Optimization procedure
-    # In case there is excess power from the PV, the optimization procedure is followed
+    ### Optimisation procedure
+    # In case there is excess power from the PV, the optimisation procedure is followed
     # Please select the objective to pursue, between:
     # 'MINGRI': MINimize GRid Interactions (grid feed of excess energy and grid purchase of deficit energy)
     # 'MAXSHE': MAXimize SHared Energy (hourly minimum between all energy fed into the grid, PV + battery,
@@ -128,7 +129,7 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
 
     ## Definition of the problem
 
-    # Initializing the optimization problem using Pulp
+    # Initializing the optimisation problem using Pulp
     # The problem is set as minimizing the objective function
 
     if opt_objective == 'MINGRI': opt_problem = LpProblem('Pulp', LpMinimize)
@@ -266,7 +267,7 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
     ## Solution of the problem
     # For each time-step the variables are evaluated in order to reach the objective
 
-    # In some particular cases PULP fails at optimizing the problem and raises an error
+    # In some particular cases PULP fails at optimising the problem and raises an error
     # In order to avoid stopping the procedure due to such errors, a try-except is used
     # If the xception raises, nans are returned
 
@@ -274,23 +275,23 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
         opt_problem.solve(PULP_CBC_CMD(msg = 0)) #PULP_CBC_CMD(msg=True)
         
     except:
-        optimization_status = 'Opt. did not work'
+        optimisation_status = 'Opt. did not work'
         grid_feed = np.zeros((time_length,)); grid_feed[:] = np.nan
         grid_purchase = np.zeros((time_length,)); grid_purchase[:] = np.nan
         battery_charge = np.zeros((time_length,)); battery_charge[:] = np.nan
         battery_discharge = np.zeros((time_length,)); battery_discharge[:] = np.nan
         battery_energy = np.zeros((time_length,)); battery_energy[:] = np.nan
 
-        return optimization_status, grid_feed, grid_purchase, battery_charge, battery_discharge, battery_energy      
+        return optimisation_status, grid_feed, grid_purchase, battery_charge, battery_discharge, battery_energy      
 
-    # If instead everything goes smooth, the optimization status is printed and the optimized values are returned
+    # If instead everything goes smooth, the optimisation status is printed and the optimised values are returned
 
-    # Optimization status
-    optimization_status = LpStatus[opt_problem.status] 
+    # Optimisation status
+    optimisation_status = LpStatus[opt_problem.status] 
 
 
     ## Post-processing
-    # The optimized values of the variables are stored in order to be returned
+    # The optimised values of the variables are stored in order to be returned
 
     for i in range(time_length):
         
@@ -313,6 +314,6 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
         shared_power[i] = value(shared_power[i])
 
 
-    return optimization_status, \
+    return optimisation_status, \
         np.asarray(shared_power), np.asarray(grid_feed), np.asarray(grid_purchase), \
         np.asarray(battery_charge), np.asarray(battery_discharge), np.asarray(battery_energy)

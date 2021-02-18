@@ -12,7 +12,6 @@ import datareader
 from tictoc import tic, toc
 from aggregate_load_profiler import aggregate_load_profiler as agr_hlp
 from shared_energy_evaluator import shared_energy_evaluator
-from battery_optimization import battery_optimization
 
 
 # Palette of colors to be used for plotting the results
@@ -481,7 +480,7 @@ for pv_size in pv_size_range:
         
         ## Calling the method that computes the energy shared during one year
         # For each typical day (two for each month, i.e. 24 typical days) the operation of the battery
-        # is optimized using a MILP procedure in order to minimize the exchanges with the grid
+        # is optimised using a MILP procedure in order to minimize the exchanges with the grid
         # The method that evaluates the shared energy returns a series of arrays having the same size
         # as the number of months, where values for the energy (shared, consumed, produced, etc.) are stored
 
@@ -489,8 +488,8 @@ for pv_size in pv_size_range:
 
         # Storing the results
 
-        # Status of the optimization during the current typical day
-        optimization_status = results['optimization_status']
+        # Status of the optimisation during the current typical day
+        optimisation_status = results['optimisation_status']
 
         # Energy produced by the PV during each month (kWh/month)
         pv_production_energy = results['pv_production_energy']
@@ -566,19 +565,19 @@ for pv_size in pv_size_range:
 
             # Storing the results in a tabularr form
 
-            # List of days in which the optimization did not work or was infeasible
+            # List of days in which the optimisation did not work or was infeasible
             opt_did_not_work_list = []
             # opt_unnecessary_list = []
             opt_infeasible_list = []
 
-            # Optimization status
+            # Optimisation status
             for month in months:
                 month_nickname = months[month]['id'][1]
 
                 for day in days:
                     day_nickname = days[day][1]
 
-                    opt_status = optimization_status[month][day].lower().strip('\'",._- ').replace('.','').replace(' ','_')
+                    opt_status = optimisation_status[month][day].lower().strip('\'",._- ').replace('.','').replace(' ','_')
                     if opt_status == 'opt_did_not_work': opt_did_not_work_list.append('{}, {}'.format(month_nickname.capitalize(), day_nickname))
                     # elif opt_status == 'opt_unnecessary': opt_unnecessary_list.append('{}, {}'.format(month_nickname.capitalize(), day_nickname))
                     elif opt_status == 'infeasible': opt_infeasible_list.append('{}, {}'.format(month_nickname.capitalize(), day_nickname))
@@ -635,9 +634,9 @@ else:
         mm = months[month]['id'][0]
         row = [month.capitalize()]
 
-        # Monthy results: optimization status for each typical day
+        # Monthy results: optimisation status for each typical day
         for day in days:
-            row = row + [optimization_status[month][day]]
+            row = row + [optimisation_status[month][day]]
 
         # Montlhy results: energy values (kWh/month) and performance indices (%)
         row = row + (['{0:.2f}'.format(index_self_suff_month[mm]), \
@@ -669,7 +668,7 @@ else:
 
 
 # Printing the tabulate
-message = '\nOptimization status and results (self-sufficiency and self-consumption indices, shared energy, etc.)\n'
+message = '\nOptimisation status and results (self-sufficiency and self-consumption indices, shared energy, etc.)\n'
 print(message) 
 print(tabulate(tab_results, headers = headers))
 

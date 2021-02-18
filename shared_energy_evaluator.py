@@ -10,7 +10,7 @@ Created on Wed Jan 27 08:51:11 2020
 
 import numpy as np
 from tabulate import tabulate
-from battery_optimization import battery_optimization
+from battery_optimisation import battery_optimisation
 import matplotlib.pyplot as plt
 
 def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, auxiliary_dict, fixed_analysis_flag):
@@ -82,9 +82,9 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
 
     ### Starting the evaluation
 
-    # Optimization status for each month and day-type
+    # Optimisation status for each month and day-type
 
-    optimization_status = {}
+    optimisation_status = {}
 
     # Monthly values for the energy are stored 
 
@@ -141,13 +141,13 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
     # Running through the months
     for month in months:
 
-        optimization_status[month] = {}
+        optimisation_status[month] = {}
 
         # Unique number used to identify the month in the arrays elements
         mm = months[month]['id'][0]
 
-        # In some cases the optimization method does not work properly and it is not able to perform the optimization.
-        # When this happen, battery_optimization returns nans. In order not to discard a typical day in which the energy
+        # In some cases the optimisation method does not work properly and it is not able to perform the optimization.
+        # When this happen, battery_optimisation returns nans. In order not to discard a typical day in which the energy
         # values are nan from the total count, the energy is re-constructed using the adjacent typical day (same month)
         # or the adjacent month.
         # In more detail, if the energy values in a typical day are nan, an attempt is made to fill this values using
@@ -191,17 +191,13 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
             pv_production = pv_production_month[:, mm]  
             consumption = consumption_month_day[:, mm, dd]
             
-            # Using the method battery_optimization from the module battery_optimization.py to run the MILP
-            # optimization in order to determine the battery usage strategy in the typical day. Powers and 
+            # Using the method battery_optimisation from the module battery_optimisation.py to run the MILP
+            # optimisation in order to determine the battery usage strategy in the typical day. Powers and 
             # energy stored in the battery at each time-step are returned.
 
-            # optimization_status[month][day], \
-            # grid_feed, grid_purchase, battery_charge, battery_discharge, battery_energy = \
-            # battery_optimization(pv_production, pv_available, net_load, time_dict, technologies_dict)
-
-            optimization_status[month][day], \
+            optimisation_status[month][day], \
             shared_power, grid_feed, grid_purchase, battery_charge, battery_discharge, battery_energy = \
-            battery_optimization(pv_production, consumption, time_dict, technologies_dict)
+            battery_optimisation(pv_production, consumption, time_dict, technologies_dict)
  
             # # Uncomment to check that the constraints and equations defined in the problem are actually respected
             # tol = 1e-4
@@ -226,7 +222,7 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
             shared_energy[mm] += np.nansum(shared_power)*dt*number_of_days
 
 
-            # In case nan are returned by battery_optimization, the contribution of the current typical day to the energy
+            # In case nan are returned by battery_optimisation, the contribution of the current typical day to the energy
             # in the current month is null (due to np.nansum), therefore the value is to be fixed
             if np.any(np.isnan(shared_power)): 
 
@@ -312,7 +308,7 @@ def shared_energy_evaluator(time_dict, input_powers_dict, technologies_dict, aux
 
 
     results = {
-        'optimization_status': optimization_status,
+        'optimisation_status': optimisation_status,
         'pv_production_energy': pv_production_energy,
         'consumption_energy': consumption_energy,
         'grid_feed_energy': grid_feed_energy,
