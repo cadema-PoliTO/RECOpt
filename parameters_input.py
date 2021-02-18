@@ -91,7 +91,7 @@ def parameters_input():
         'power_max': {'type': float, 'default_val': 3., 'min_val': 1., 'max_val': 10., 'uom': '(kW)'},
         'en_class': {'type': str, 'default_val': 'A+', 'possible_values': ['A+++', 'A++', 'A+', 'A', 'B', 'C', 'D'], 'uom': '(/)'},
         'ftg_avg': {'type': float, 'default_val': 100., 'min_val': 10., 'max_val': 1000., 'uom': '(m2)'},
-        'dt_aggr':{'type': int, 'default_val': 60, 'possible_values': [5, 10, 15, 20, 30, 45, 60], 'uom': '(min)'},
+        'dt_aggr':{'type': int, 'default_val': 60, 'possible_values': [15, 30, 60], 'uom': '(min)'},
         # 'time_scale': {'type': str, 'default_val': 'h', 'possible_values': ['min', 'h'], 'uom': '(/)'},
         # 'power_scale': {'type': str, 'default_val': 'kW', 'possible_values': ['W', 'kW', 'MW'], 'uom': '(/)'},
         # 'energy_scale': {'type': str, 'default_val': 'MWh', 'possible_values': ['kWh', 'MWh'], 'uom': '(/)'},
@@ -553,7 +553,7 @@ def simulation_setup(tech):
                     .strip("',.=\"_ ").lower().replace('-', '_'); continue
 
             params[param_name] = param_val
-            print('Done: {} changed to {}.'.format(param_name, param_val, param_dict[param_name]['uom'].strip('()')))
+            print('Done: {} changed to {} {}.'.format(param_name, param_val, param_dict[param_name]['uom'].strip('()')))
 
 
     ## Storing the updated parameters
