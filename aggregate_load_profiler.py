@@ -353,7 +353,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
 
 
     ## Evaluating the load profiles for the households, using the methods created, for each season and type of day
-
+    
     # Running through the seasons using a for loop
     for season in seasons:
 
@@ -390,8 +390,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
             aggr_households_lp = aggregator(time_dict, households_lp, dt_aggr)
 
             # Evaluating the sum of all the load profiles, for each time-step
-            aggregate_lp = np.sum(aggr_households_lp, axis = 1) 
-
+            aggregate_load_profile = np.sum(aggr_households_lp, axis = 1) 
+ 
             # Sorting the values of the power from all the households in an increasing way, for each time-step
             sorted_lp = np.sort(aggr_households_lp, axis = 1) 
             
@@ -404,8 +404,8 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
             lp_samp_stor[:, ss, :, dd] = households_lp[:, samp].transpose()
 
             # Saving all the load profiles in the proper array for the current season and day-type
-            lp_tot_stor[ss, :, dd] = aggregate_lp
-            lp_avg_stor[ss, :, dd] = aggregate_lp/n_hh
+            lp_tot_stor[ss, :, dd] = aggregate_load_profile
+            lp_avg_stor[ss, :, dd] = aggregate_load_profile/n_hh
             lp_max_stor[ss, :, dd] = quantile_lp_max
             lp_med_stor[ss, :, dd] = quantile_lp_med
             lp_min_stor[ss, :, dd] = quantile_lp_min
@@ -418,7 +418,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
             n_days_season = days_distr[season][day]
             energy_stor[ss, :, :] += apps_energy*n_days_season
     
-    # print('Yearly energy from integration of load profiles:{} kWh/year'.format(np.sum(energy_stor)/1000))
+
     
     ### Saving the results as .csv files
 

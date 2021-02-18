@@ -50,11 +50,12 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
 
     ## Sizes and battery specficiations of the various technologies
 
-    # Grid maximum power (kW)
-    grid_power_max = technologies_dict['grid_power_max']
-
-    # # PV size (kW)
+    # PV size (kW)
     pv_size = technologies_dict['pv_size']
+
+    # Grid maximum power (kW)
+    grid_feed_max = technologies_dict['pv_size']
+    grid_purchase_max = technologies_dict['grid_power_max']
 
     # Battery size/capacity (kWh)
     battery_size = technologies_dict['battery_size']
@@ -83,12 +84,12 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
     battery_energy_min = SOCmin*battery_capacity 
 
     # Maximum power of discharge and charge (kW)
-    battery_discharge_pmax = battery_capacity*(SOCmax-SOCmin)/t_cd_min 
-    battery_charge_pmax = battery_discharge_pmax
+    battery_discharge_max = battery_capacity*(SOCmax-SOCmin)/t_cd_min 
+    battery_charge_max = battery_discharge_max
 
-    # Evaluating the excess energy, if the production tries to fulfill the whole demand (needed to bound the grid_feed power)
-    pv_available = pv_production - consumption
-    pv_available[pv_available < 0] = 0
+    # # Evaluating the excess energy, if the production tries to fulfill the whole demand (needed to bound the grid_feed power)
+    # pv_available = pv_production - consumption
+    # pv_available[pv_available < 0] = 0
 
 
     # ## Easy solution
@@ -159,8 +160,8 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
     # The battery_charge/discharge are not known in advance but their maximum value is, therefore M is evaluated as follows
     # M = 100*max(np.max(pv_production) + battery_discharge_pmax, \
     #             np.max(consumption) + battery_charge_pmax)
-    M = 100*max(pv_size + battery_discharge_pmax, \
-                grid_power_max + battery_charge_pmax)
+    M = 100*max(pv_size + battery_discharge_max, \
+                grid_purchase_max + battery_charge_max)
 
     # Assigning the variables 
     for i in range(time_length):
@@ -204,16 +205,16 @@ def battery_optimization(pv_production, consumption, time_dict, technologies_dic
                             - battery_discharge[i]*(1/ eta_discharge))*dt) == 0
 
         # Constraint on maximum grid power (both for feed and purchase)
-        opt_problem += (grid_feed[i] <= grid_feed_state[i] * grid_power_max) 
-        opt_problem += (grid_purchase[i] <= grid_purchase_state[i] * grid_power_max)
+        opt_problem += (grid_feed[i] <= grid_feed_state[i] * grid_feed_max) 
+        opt_problem += (grid_purchase[i] <= grid_purchase_state[i] * grid_purchase_max)
 
         # Constraint on feeding/purchasing: they cannot be both active at the same time
         opt_problem += (grid_feed_state[i] + grid_purchase_state[i] >= 0)
         opt_problem += (grid_feed_state[i] + grid_purchase_state[i] <= 1)
 
         # Constraint on maximum charge and discharge power
-        opt_problem += (battery_charge[i] <= battery_charge_state[i] * battery_charge_pmax)
-        opt_problem += (battery_discharge[i] <= battery_discharge_state[i] * battery_discharge_pmax)
+        opt_problem += (battery_charge[i] <= battery_charge_state[i] * battery_charge_max)
+        opt_problem += (battery_discharge[i] <= battery_discharge_state[i] * battery_discharge_max)
 
         # Constraint on charging/discharging: they cannot be both active at the same time
         opt_problem += (battery_charge_state[i] + battery_discharge_state[i] >= 0)
