@@ -1001,6 +1001,7 @@ def daily_profiles(time, powers, plot_specs, fig_specs, **params):
 
             axtw.set_ylabel(fig_specs['yaxis_right_label'], fontsize = fontsize_labels)
             axtw.tick_params(axis ='y', labelsize = fontsize_ticks)
+            if ymax_right == ymin_right: ymax_right = ymin_right + 1
             axtw.set_ylim([0.9*ymin_right, 1.1*ymax_right])
 
             if n_plot_right > max_col: n_plot_right = max_col
@@ -1144,7 +1145,8 @@ def seasonal_load_profiles(time, powers, season, plot_specs, fig_specs, **params
         axi.set_xlabel('Time ({})'.format(time_scale), fontsize = fontsize_labels)
         axi.set_ylabel('Power ({})'.format(power_scale), fontsize = fontsize_labels)
         axi.set_xlim([time[0], time[-1]])
-        ymin = np.min(powers); ymax = np.max(powers)
+        ymin = np.min(powers); ymax = np.max(powers); 
+        if ymax == ymin: ymax = ymin + 1
         axi.set_ylim([0.9*ymin, 1.1*ymax])
         # Set one tick each hour on the x-axis
         axi.set_xticks(list(time[: : int(60*ts/dt)]))

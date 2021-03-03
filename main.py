@@ -436,11 +436,11 @@ if n_configurations  != 1:
     # Shared energy in a year for each configuration
     esh_configurations = np.zeros((n_pv_sizes, n_battery_sizes))
 
-    # Index of self-sufficiency in a year for each configuration
-    iss_configurations = np.zeros((n_pv_sizes, n_battery_sizes))
+    # Self-sufficiency rate in a year for each configuration
+    ssr_configurations = np.zeros((n_pv_sizes, n_battery_sizes))
 
-    # Index of self-consumption in a year for each configuration
-    isc_configurations = np.zeros((n_pv_sizes, n_battery_sizes))
+    # Self-consumption rate in a year for each configuration
+    scr_configurations = np.zeros((n_pv_sizes, n_battery_sizes))
 
 
 # A message is printed to let the user know how the simulation is proceeding (every 25% of progress)
@@ -517,11 +517,11 @@ for pv_size in pv_size_range:
 
         # Monthly values
 
-        # Index of self-sufficiency in each month (%)
-        index_self_suff_month = shared_energy/(consumption_energy + battery_charge_energy)*100
+        # Self-sufficiency rate in each month (%)
+        self_suff_rate_month = shared_energy/(consumption_energy + battery_charge_energy)*100
 
-        # Index of self-consumption in each month (%)
-        index_self_cons_month = shared_energy/(pv_production_energy + battery_discharge_energy)*100
+        # Self-consumption rate in each month (%)
+        self_cons_rate_month = shared_energy/(pv_production_energy + battery_discharge_energy)*100
 
         # Yearly values (kWh/year)
 
@@ -539,12 +539,11 @@ for pv_size in pv_size_range:
 
         shared_energy_year = np.sum(shared_energy)
 
-        # Index of self-sufficiency in a year (%)
-        index_self_suff_year =  shared_energy_year/(consumption_year + battery_charge_year)*100
+        # Self-sufficiency rate in a year (%)
+        self_suff_rate_year =  shared_energy_year/(consumption_year + battery_charge_year)*100
 
-        # Index of self-consumption in a year (%)
-        index_self_cons_year = shared_energy_year/(pv_production_year + battery_discharge_year)*100
-        # index_self_cons_year = np.sum(shared_energy)/np.sum(pv_production_energy + battery_discharge_energy)*100
+        # Self-consumption rate in a year (%)
+        self_cons_rate_year = shared_energy_year/(pv_production_year + battery_discharge_year)*100
 
 
         ## Post-processing of the results 
@@ -559,8 +558,8 @@ for pv_size in pv_size_range:
             # Storing the yearly values of the self-sufficiency and self-consumption indices and of the shared energy 
             # for the current configuration in order to be plotted outside of the loops
 
-            iss_configurations[pv_index, battery_index] = index_self_suff_year
-            isc_configurations[pv_index, battery_index] = index_self_cons_year
+            ssr_configurations[pv_index, battery_index] = self_suff_rate_year
+            scr_configurations[pv_index, battery_index] = self_cons_rate_year
             esh_configurations[pv_index, battery_index] = np.sum(shared_energy)
 
             # Storing the results in a tabularr form
@@ -584,8 +583,8 @@ for pv_size in pv_size_range:
 
             # Energy values in a year (kWh/year)
             row = [pv_size, battery_size, '\n'.join(opt_did_not_work_list), '\n'.join(opt_infeasible_list), \
-                '{0:.2f}'.format(index_self_suff_year), \
-                '{0:.2f}'.format(index_self_cons_year), \
+                '{0:.2f}'.format(self_suff_rate_year), \
+                '{0:.2f}'.format(self_cons_rate_year), \
                 '{0:.1f}'.format(np.sum(shared_energy)), \
                 '{0:.1f}'.format(np.sum(pv_production_energy)), \
                 '{0:.1f}'.format(np.sum(consumption_energy)), \
@@ -616,7 +615,7 @@ print('\n{0:d} configuration(s) evaluated in {1:.3f} s.'.format(n_configurations
 # Header to be used in the tabulate in case of parametric analysis at least for one of the two technologies
 if fixed_analysis_flag != 1:
     headers = ['PV size \n(kW)', 'Battery size \n(kWh)', 'Opt. did not work in\n*values fixed', 'Opt. infeasible in\n*minor issue', \
-                'ISS \n(%)', 'ISC \n(%)', 'Shared energy \n(kWh/year)', 'PV production \n(kWh/year)', 'Consumption \n(kWh/year)', \
+                'SSR \n(%)', 'SCR \n(%)', 'Shared energy \n(kWh/year)', 'PV production \n(kWh/year)', 'Consumption \n(kWh/year)', \
                 'Grid feed \n(kWh)', 'Grid purchase \n(kWh)', 'Battery charge \n(kWh)', 'Battery discharge \n(kWh)']
 
 # In case of fixed size simulation for both the PV and the battery the tabulate has still to be built
@@ -625,7 +624,7 @@ else:
 
     # Storing the results in a tabular form 
 
-    headers = ['Month', 'Week-day', 'Weekend-day', 'ISS \n(%)', 'ISC \n(%)', \
+    headers = ['Month', 'Week-day', 'Weekend-day', 'SSR \n(%)', 'SCR \n(%)', \
         'Shared energy \n(kWh)', 'PV production \n(kWh)', 'Consumption \n(kWh)', \
         'Grid feed \n(kWh)', 'Grid purchase \n(kWh)', 'Battery charge \n(kWh)', 'Battery discharge \n(kWh)']
     
@@ -639,8 +638,8 @@ else:
             row = row + [optimisation_status[month][day]]
 
         # Montlhy results: energy values (kWh/month) and performance indices (%)
-        row = row + (['{0:.2f}'.format(index_self_suff_month[mm]), \
-                    '{0:.2f}'.format(index_self_cons_month[mm]), \
+        row = row + (['{0:.2f}'.format(self_suff_rate_month[mm]), \
+                    '{0:.2f}'.format(self_cons_rate_month[mm]), \
                     '{0:.1f}'.format(shared_energy[mm]), \
                     '{0:.1f}'.format(pv_production_energy[mm]), \
                     '{0:.1f}'.format(consumption_energy[mm]), \
@@ -655,8 +654,8 @@ else:
     # Yearly results: energy values (kWh/year) and performance indices (%)
     tab_results.append([]*len(headers))
     tab_results.append(['Year', '/', '/', \
-                '{0:.2f}'.format(index_self_suff_year), \
-                '{0:.2f}'.format(index_self_cons_year), \
+                '{0:.2f}'.format(self_suff_rate_year), \
+                '{0:.2f}'.format(self_cons_rate_year), \
                 '{0:.1f}'.format(shared_energy_year), \
                 '{0:.1f}'.format(pv_production_year), \
                 '{0:.1f}'.format(consumption_year), \
@@ -668,7 +667,7 @@ else:
 
 
 # Printing the tabulate
-message = '\nOptimisation status and results (self-sufficiency and self-consumption indices, shared energy, etc.)\n'
+message = '\nOptimisation status and results (self-sufficiency and self-consumption rates, shared energy, etc.)\n'
 print(message) 
 print(tabulate(tab_results, headers = headers))
 
@@ -753,8 +752,8 @@ if fixed_analysis_flag != 1:
 
     # The data to be plotted are the iss, isc and shared energy for each configuration
     plot_specs = {
-        0: {'type': 'plot', 'yaxis': 'right', 'label': 'ISS'},
-        1: {'type': 'plot', 'yaxis': 'right', 'label': 'ISC'},
+        0: {'type': 'plot', 'yaxis': 'right', 'label': 'SSR'},
+        1: {'type': 'plot', 'yaxis': 'right', 'label': 'SCR'},
         2: {'type': 'bar', 'yaxis': 'left', 'label': 'Shared energy'},
         }
 
@@ -765,7 +764,7 @@ if fixed_analysis_flag != 1:
         'yaxis_left_label': 'Energy (kWh/year)',
         'lead_size_name': 'Battery',
         'lead_size_uom': 'kWh',
-        'yaxis_right_ylim': [0, 1.1*np.max(np.maximum(iss_configurations, isc_configurations))],
+        'yaxis_right_ylim': [0, 1.1*np.max(np.maximum(ssr_configurations, scr_configurations))],
         'yaxis_left_ylim': [0, 1.1*np.max(esh_configurations)],
         }
 
@@ -775,8 +774,8 @@ if fixed_analysis_flag != 1:
         for battery_size in battery_size_range:
 
             battery_index = battery_size_range.index(battery_size)
-            data  = np.stack((iss_configurations[:, battery_index], \
-                            isc_configurations[:, battery_index], \
+            data  = np.stack((ssr_configurations[:, battery_index], \
+                            scr_configurations[:, battery_index], \
                             esh_configurations[:, battery_index]), axis = 1)
             data = data[:, np.newaxis, :]
 
@@ -791,8 +790,8 @@ if fixed_analysis_flag != 1:
         for pv_size in pv_size_range:
 
             pv_index = pv_size_range.index(pv_size)
-            data  = np.stack((iss_configurations[pv_index, :], \
-                            isc_configurations[pv_index, :], \
+            data  = np.stack((ssr_configurations[pv_index, :], \
+                            scr_configurations[pv_index, :], \
                             esh_configurations[pv_index, :]), axis = 1)
             data = data[np.newaxis, :, :]
 
@@ -810,10 +809,10 @@ if fixed_analysis_flag != 1:
     # A parametric chart is generated where for the pairs of PV/battery sizes are represented basing on the values of isc and iss
     fig_specs = {
         'suptitle': 'Parametric analysis on the PV and/or battery size',
-        'xaxis_label': 'Index of Self-Consumption (%)',
-        'yaxis_label': 'Index of Self-Sufficiency (%)',
-        'xaxis_lim': [0.98*np.min(isc_configurations), 1.02*np.max(isc_configurations)],
-        'yaxis_lim': [0.95*np.min(iss_configurations), 1.05*np.max(iss_configurations)],
+        'xaxis_label': 'Self-Consumption Rate (%)',
+        'yaxis_label': 'Self-Sufficiency Rate (%)',
+        'xaxis_lim': [0.98*np.min(scr_configurations), 1.02*np.max(scr_configurations)],
+        'yaxis_lim': [0.95*np.min(ssr_configurations), 1.05*np.max(ssr_configurations)],
         }
 
     plot_specs = {}
@@ -821,13 +820,13 @@ if fixed_analysis_flag != 1:
     for battery_size in battery_size_range:
 
         battery_index = battery_size_range.index(battery_size)
-        plot_specs[battery_index] = {'plot_xvalues': isc_configurations[:, battery_index], 'plot_yvalues': iss_configurations[:, battery_index], \
+        plot_specs[battery_index] = {'plot_xvalues': scr_configurations[:, battery_index], 'plot_yvalues': ssr_configurations[:, battery_index], \
             'plot_yaxis': 'left', 'plot_label': 'Battery: {} kWh'.format(battery_size), 'plot_linestyle': '-', 'plot_marker': ''}
     
     for pv_size in pv_size_range:
 
         pv_index = pv_size_range.index(pv_size)
-        plot_specs[pv_index + battery_index + 1] = {'plot_xvalues': isc_configurations[pv_index, :], 'plot_yvalues': iss_configurations[pv_index, :], \
+        plot_specs[pv_index + battery_index + 1] = {'plot_xvalues': scr_configurations[pv_index, :], 'plot_yvalues': ssr_configurations[pv_index, :], \
             'plot_yaxis': 'right', 'plot_label': 'PV: {} kW'.format(pv_size), 'plot_linestyle': '--', 'plot_marker': 's'}
 
     fig = plot.parametric_chart(plot_specs, fig_specs)
@@ -887,6 +886,9 @@ else:
         mm = months[month]['id'][0]
 
         fig_specs['title'] = month
+
+        # Battery's SOC is plotted; to avoid division by 0 in case of battery_size == 0:
+        batt_size = max(1e-5, battery_size)
         
         powers = np.stack((pv_production_month_day[:, mm, :],
                         consumption_month_day[:, mm, :],
@@ -895,7 +897,7 @@ else:
                         battery_charge_month_day[:, mm, :],
                         battery_discharge_month_day[:, mm, :],
                         shared_power_month_day[:, mm, :],
-                        battery_energy_month_day[:, mm, :]/battery_size*100),
+                        battery_energy_month_day[:, mm, :]/batt_size*100),
                         axis = 0)
 
         fig = plot.daily_profiles(time_sim, powers, plot_specs, fig_specs, **params)
