@@ -297,9 +297,9 @@ def simulation_setup(tech):
     if tech.strip("',.=\"_ ").lower().replace(' ', '_').replace('-', '_') == 'battery':
         param_dict = {
             'sim_type': {'type': str, 'default_val': 'parametric', 'possible_values': ['fixed', 'parametric'], 'uom': '(/)'},
-            'size': {'type': float, 'default_val': 2, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kWh)'},
-            'size_min': {'type': float, 'default_val': 1, 'min_val': 0.5, 'max_val': 10000, 'uom': '(kWh)'},
-            'size_max': {'type': float, 'default_val': 5., 'min_val': 0.5, 'max_val': 10000, 'uom': '(kWh)'},
+            'size': {'type': float, 'default_val': 2, 'min_val': 0, 'max_val': 10000, 'uom': '(kWh)'},
+            'size_min': {'type': float, 'default_val': 1, 'min_val': 0, 'max_val': 10000, 'uom': '(kWh)'},
+            'size_max': {'type': float, 'default_val': 5., 'min_val': 0, 'max_val': 10000, 'uom': '(kWh)'},
             'n_sizes': {'type': int, 'default_val': 5, 'min_val': 1, 'max_val': 5, 'uom': '(/)'}
             }
 

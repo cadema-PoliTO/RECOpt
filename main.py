@@ -886,6 +886,9 @@ else:
         mm = months[month]['id'][0]
 
         fig_specs['title'] = month
+
+        # Battery's SOC is plotted; to avoid division by 0 in case of battery_size == 0:
+        batt_size = max(1e-5, battery_size)
         
         powers = np.stack((pv_production_month_day[:, mm, :],
                         consumption_month_day[:, mm, :],
@@ -894,7 +897,7 @@ else:
                         battery_charge_month_day[:, mm, :],
                         battery_discharge_month_day[:, mm, :],
                         shared_power_month_day[:, mm, :],
-                        battery_energy_month_day[:, mm, :]/battery_size*100),
+                        battery_energy_month_day[:, mm, :]/batt_size*100),
                         axis = 0)
 
         fig = plot.daily_profiles(time_sim, powers, plot_specs, fig_specs, **params)
