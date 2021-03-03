@@ -1,4 +1,4 @@
-# EnergCommOptim
+# RECOpt
 
 ## Energetic evaluation and optimization of energy community configurations
 
