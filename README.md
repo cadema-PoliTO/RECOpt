@@ -7,7 +7,7 @@ The repository contains a routine that optimizes the operation of a PV system wi
 ## Requirements
 
 Codes included in this repository are written in Python 3, that is the only real requirement. They have been tested with Python 3.8 but also earlier version of Python 3 should work.
-Python packages needed for running the methods are: pathlib, numpy, scipy, pulp, csv, tabulate, matplotlib.pyplot, math, random. All the other self-created methods used are present in this repository.
+Python packages needed for running the methods are: pathlib, numpy, scipy, pulp, csv, tabulate, matplotlib.pyplot, math, random. All the other self-created methods needed for the tool to work are contained in this repository.
 
 ## Content of the repository
 
