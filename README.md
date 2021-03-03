@@ -1,6 +1,6 @@
 # RECOpt
 
-## Energetic evaluation and optimization of energy community configurations
+## Energetic evaluation and optimization of renewable energy communities
 
 The repository contains a routine that optimizes the operation of a PV system with energy storage for fixed or variable (parametric) sizes for both of them, in the context of collective self-consumption and energy communities in Italy. PV production data are to be provided by the user (PVGIS database can be used), while consumption profiles are generated for an aggregate of households using probabilistic methods.
 
