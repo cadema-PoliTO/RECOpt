@@ -18,7 +18,7 @@ In this folder, all the input _.csv_ files needed for the calculation are contai
 
 #### Optimization and energy assessment of the PV-storage system
 
-These files should be updated from the user.
+These files should be updated by the user.
 
 * *'pv_production_unit.csv'*: it contains the hourly unit production from the PV installation(s) in the given location, for typical days (one for each month of the year)
 
@@ -29,7 +29,7 @@ These files should be updated from the user.
 
 #### Generation of the load profiles
 
-These files don't need to be updated from the user.
+These files don't need to be updated by the user.
 
 * *'eltdome_report.csv'*: it contains the attributes for all the appliances. It also contains, for each appliance, its "nickname", that is crucial for the correct loading of the other files.
 
