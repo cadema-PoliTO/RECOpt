@@ -303,7 +303,7 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
     # the maximum power (demanded by less than 15% of the households), the median
     # power (demanded by less than 50% of the households) and the minimum (demanded 7
     # by less than 85% of the households).
-    nmax = int(np.round(n_hh*q_max/100))
+    nmax = min(int(np.round(n_hh*q_max/100)), n_hh)
     nmed = int(np.round(n_hh*q_med/100))
     nmin = int(np.round(n_hh*q_min/100)) 
 
