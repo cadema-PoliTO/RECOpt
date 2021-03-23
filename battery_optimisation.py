@@ -123,7 +123,7 @@ def battery_optimisation(pv_production, consumption, time_dict, technologies_dic
     #           and all energy taken from the grid, consumption + battery)
     opt_objectives = ['MAXSHE', 'MINGRI']
 
-    opt_objective_num = 0
+    opt_objective_num = 1
     opt_objective = opt_objectives[opt_objective_num]
 
 
@@ -162,7 +162,7 @@ def battery_optimisation(pv_production, consumption, time_dict, technologies_dic
     # M = 100*max(np.max(pv_production) + battery_discharge_pmax, \
     #             np.max(consumption) + battery_charge_pmax)
     M = 100*max(pv_size + battery_discharge_max, \
-                grid_purchase_max + battery_charge_max)
+                grid_purchase_max)
 
     # Assigning the variables 
     for i in range(time_length):
@@ -231,23 +231,23 @@ def battery_optimisation(pv_production, consumption, time_dict, technologies_dic
         # Constraint on grid purchase: the battery cannot be charged from the grid
         opt_problem += (battery_charge[i] <= pv_production[i]) 
 
-        # Linearization of shared_power[i] = min(pv_production[i] + battery_discharge[i], consumption[i] + battery_charge[i])
+        # Linearization of shared_power[i] = min(pv_production[i] + battery_discharge[i] - battery_charge[i], consumption[i])
 
-        # Constraint on the shared energy, that must be smaller than both pv_production + battery_discharge
-        # and consumption + battery_charge (1/2)
-        opt_problem += (shared_power[i] <= pv_production[i] + battery_discharge[i])
-        opt_problem += (shared_power[i] <= consumption[i] + battery_charge[i])
+        # Constraint on the shared energy, that must be smaller than both pv_production + battery_discharge - battery_charge
+        # and consumption (1/2)
+        opt_problem += (shared_power[i] <= (pv_production[i] + battery_discharge[i] - battery_charge[i]))
+        opt_problem += (shared_power[i] <= (consumption[i]))
 
         # Definition of y that is 1 when pv_production + battery_discharge <= consumption[i] + battery_charge[i], 0 otherwise
         # The definition of y is introduced as a constraint
-        opt_problem += ((consumption[i] + battery_charge[i]) - (pv_production[i] + battery_discharge[i]) <= M*y[i])
-        opt_problem += ((pv_production[i] + battery_discharge[i]) - (consumption[i] + battery_charge[i]) <= M*(1 - y[i]))
+        opt_problem += ((consumption[i]) - (pv_production[i] + battery_discharge[i] - battery_charge[i]) <= M*y[i])
+        opt_problem += ((pv_production[i] + battery_discharge[i] - battery_charge[i]) - (consumption[i]) <= M*(1 - y[i]))
 
         # Constraint on the shared energy, that must be not only smaller than both (...) but also equal to the minimum value
-        # when y == 1, shared_power = pv_production[i] + battery_discharge[i] since it is both larger-equal for this constraint
-        # and smaller-equal for the previous one. When y == 0, the other way around
-        opt_problem += (shared_power[i] >= pv_production[i] + battery_discharge[i] - M*(1 - y[i]))
-        opt_problem += (shared_power[i] >= consumption[i] + battery_charge[i]  - M*y[i])
+        # when y == 1, shared_power = pv_production[i] + battery_discharge[i] - battery_charge[i] since it is both larger-equal
+        # for this constraint and smaller-equal for the previous one. When y == 0, the other way around
+        opt_problem += (shared_power[i] >= (pv_production[i] + battery_discharge[i] - battery_charge[i]) - M*(1 - y[i]))
+        opt_problem += (shared_power[i] >= (consumption[i]) - M*y[i])
   
     
     ## Setting the objective 
