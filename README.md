@@ -1,8 +1,8 @@
 # RECOpt
 
-## Energetic evaluation and optimization of renewable energy communities
+## Energetic evaluation and optimisation of renewable energy communities
 
-The repository contains a tool that optimizes the operation of a PV system with energy storage for fixed or variable (parametric) sizes for both of them, in the context of collective self-consumption and energy communities in Italy. PV production data are to be provided by the user (PVGIS database can be used), while consumption profiles are generated for an aggregate of households using probabilistic methods.
+The repository contains a tool that optimises the operation of a PV system with energy storage for fixed or variable (parametric) sizes for both of them, in the context of collective self-consumption and energy communities in Italy. PV production data are to be provided by the user (PVGIS database can be used), while consumption profiles are generated for an aggregate of households using probabilistic methods.
 
 ## Requirements
 
@@ -16,7 +16,7 @@ Python packages needed for running the methods are: pathlib, numpy, scipy, pulp,
 In this folder, all the input _.csv_ files needed for the calculation are contained. Some of them must be updated from the user. Their name is properly formatted so that each methods knows which file to look at when certain data are needed. Particularly, the files are the followings. 
 
 
-#### Optimization and energy assessment of the PV-storage system
+#### Optimisation and energy assessment of the PV-storage system
 
 These files should be updated by the user.
 
@@ -50,7 +50,7 @@ These files don't need to be updated by the user.
 
 * `shared_energy_evaluator.py`: the module contains a method that evaluates the performance (shared energy, and other quantities) for a given configuration (number of households, size of the PV and battery systems) in one year, using a number of typical days (two for each month, both week-day and weekend-day). This module is not directly used by the user. 
 
-* `battery_optimization.py`: the module contains a method that optimizes the operation of the battery in one day, once that the production from the pv and the consumption from the households are given. At the moment, if the user wants to change the objective of the optimization, this should be done here, manually. This module is not directly used by the user. 
+* `battery_optimisation.py`: the module contains a method that optimises the operation of the battery in one day, once that the production from the pv and the consumption from the households are given. At the moment, if the user wants to change the objective of the optimisation, this should be done here, manually. This module is not directly used by the user. 
 
 * `aggregate_load_profiler.py`: the module contains a method that generates the aggregated load profiles in different typical days (two for each season, both week-day and weekend-day) for a number of households. If the user chooses so when running the simulation, detailed files and figures about the load profiles and the energy consumption from the electric appliances are generated and saved in Output/. If the user wants to change some very specific parameters about the generation of the load profiles, this should be done here. Normally the user does not need to use this module, but it can be used to test the generation of the load profile for the aggregate of household.
 
