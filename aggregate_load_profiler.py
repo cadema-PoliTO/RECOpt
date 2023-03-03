@@ -303,9 +303,9 @@ def aggregate_load_profiler(params, file_store_flag, fig_store_flag):
     # the maximum power (demanded by less than 15% of the households), the median
     # power (demanded by less than 50% of the households) and the minimum (demanded 7
     # by less than 85% of the households).
-    nmax = min(int(np.round(n_hh*q_max/100)), n_hh)
-    nmed = int(np.round(n_hh*q_med/100))
-    nmin = int(np.round(n_hh*q_min/100)) 
+    nmax = max(min(int(np.round(n_hh*q_max/100)), n_hh-1), 0)
+    nmed = max(min(int(np.round(n_hh*q_med/100)), n_hh-1), 0)
+    nmin = max(min(int(np.round(n_hh*q_min/100)), n_hh-1) , 0)
 
     # A random sample of n_samp houses is also extracted in order to plot, for each 
     # of them, the load profile during one day for each season, for each day-type.
