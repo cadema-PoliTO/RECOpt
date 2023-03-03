@@ -9,6 +9,9 @@ The repository contains a tool that optimises the operation of a PV system with 
 Please, refer to the following list of publications to cite this work:
 *  A. Cielo, P. Margiaria, P. Lazzeroni, I. Mariuzzo, M. Repetto, Renewable Energy Communities business models under the 2020 Italian regulation, _Journal of Cleaner Production_, Volume 316, 2021, 128217, ISSN 0959-6526, doi 10.1016/j.jclepro.2021.128217. Available at this [link](https://www.sciencedirect.com/science/article/pii/S0959652621024343).
 
+Further detaild about this work can be found in:
+* G. Lorenti, Evaluation and optimisation of an energy community: an open-source tool, Master Thesis at Politecnico di Torino, Torino, 2021. Avilable at this [link](https://webthesis.biblio.polito.it/view/creators/Lorenti=3AGianmarco=3A=3A.html).
+
 ## Requirements
 
 Codes included in this repository are written in Python 3, that is the only real requirement. They have been tested with Python 3.8 but also earlier version of Python 3 should work.
