@@ -4,6 +4,11 @@
 
 The repository contains a tool that optimises the operation of a PV system with energy storage for fixed or variable (parametric) sizes for both of them, in the context of collective self-consumption and energy communities in Italy. PV production data are to be provided by the user (PVGIS database can be used), while consumption profiles are generated for an aggregate of households using probabilistic methods.
 
+## Reference
+
+Please, refer to the following list of publications to cite this work:
+*  A. Cielo, P. Margiaria, P. Lazzeroni, I. Mariuzzo, M. Repetto, Renewable Energy Communities business models under the 2020 Italian regulation, _Journal of Cleaner Production_, Volume 316, 2021, 128217, ISSN 0959-6526, doi 10.1016/j.jclepro.2021.128217. Available at this [link](https://www.sciencedirect.com/science/article/pii/S0959652621024343).
+
 ## Requirements
 
 Codes included in this repository are written in Python 3, that is the only real requirement. They have been tested with Python 3.8 but also earlier version of Python 3 should work.
